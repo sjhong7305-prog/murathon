@@ -1,36 +1,31 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MU:RATHON
 
-## Getting Started
+가격 후원(PWYW, Pay What You Want) 구매 플로우를 갖춘 아티스트 직거래 플랫폼 프로토타입입니다.
+유통사/플랫폼 수수료 없이 아티스트와 팬을 직접 연결한다는 컨셉으로, 음원·굿즈·공연 티켓을 팬이 원하는 가격에 구매할 수 있습니다.
 
-First, run the development server:
+## 실행
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+[http://localhost:3000](http://localhost:3000) 에서 확인할 수 있습니다.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 구성
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Next.js App Router + TypeScript + Tailwind CSS**
+- 목업 데이터: `src/lib/data.ts` (아티스트 4팀, 상품 8종)
+- 장바구니 상태: `src/context/cart-context.tsx` (React Context + `localStorage`)
+- PWYW 가격 선택 UI: `src/components/price-selector.tsx`
 
-## Learn More
+## 플로우
 
-To learn more about Next.js, take a look at the following resources:
+1. `/` 홈 — 아티스트 목록 / 인기 발매작
+2. `/artists/[slug]` — 아티스트 소개 및 상품 목록
+3. `/products/[id]` — 상품 상세, PWYW 가격 선택, 장바구니 담기 / 바로 구매
+4. `/cart` — 장바구니 (가격·수량 수정 가능)
+5. `/checkout` — 구매자 정보 입력 (모의 결제, 실제 결제 없음)
+6. `/checkout/success` — 주문 완료 및 요약
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+실제 결제/백엔드는 연동되어 있지 않은 프론트엔드 프로토타입입니다.
