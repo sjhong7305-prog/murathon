@@ -27,26 +27,28 @@ export function HeroBanner() {
 
   return (
     <section className="mb-16">
-      <div className="relative min-h-[420px] overflow-hidden rounded-3xl border border-line shadow-[0_12px_40px_-16px_rgba(42,42,42,0.18)] sm:min-h-[480px]">
-        <AnimatePresence>
-          <motion.div
-            key={current.id}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1 }}
-            className="absolute inset-0"
-          >
-            <Image
-              src={current.imageUrl}
-              alt={current.name}
-              fill
-              priority={index === 0}
-              sizes="(max-width: 640px) 100vw, 1200px"
-              className="object-cover"
-            />
-          </motion.div>
-        </AnimatePresence>
+      <div className="relative min-h-[420px] overflow-hidden rounded-3xl border border-line bg-surface shadow-[0_12px_40px_-16px_rgba(42,42,42,0.18)] sm:min-h-[480px]">
+        {current && (
+          <AnimatePresence>
+            <motion.div
+              key={current.id}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1 }}
+              className="absolute inset-0"
+            >
+              <Image
+                src={current.imageUrl}
+                alt={current.name}
+                fill
+                priority={index === 0}
+                sizes="(max-width: 640px) 100vw, 1200px"
+                className="object-cover"
+              />
+            </motion.div>
+          </AnimatePresence>
+        )}
 
         {/* cream scrim keeps ink-colored text readable over any featured photo */}
         <div aria-hidden className="pointer-events-none absolute inset-0 bg-cream/75" />

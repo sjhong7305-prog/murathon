@@ -36,7 +36,7 @@ export default function CommunityPostDetailPage() {
   const [authorType, setAuthorType] = useState<AuthorType>(
     session === "artist" ? "artist" : "follower"
   );
-  const [author, setAuthor] = useState(session === "artist" ? ME.name : "");
+  const [author, setAuthor] = useState(session === "artist" ? ME?.name ?? "" : "");
   const [message, setMessage] = useState("");
 
   useEffect(() => {

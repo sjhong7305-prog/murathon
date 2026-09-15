@@ -17,7 +17,7 @@ export default function NewCommunityPostPage() {
   const [authorType, setAuthorType] = useState<AuthorType>(
     session === "artist" ? "artist" : "follower"
   );
-  const [author, setAuthor] = useState(session === "artist" ? ME.name : "");
+  const [author, setAuthor] = useState(session === "artist" ? ME?.name ?? "" : "");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
 

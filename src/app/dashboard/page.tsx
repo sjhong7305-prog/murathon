@@ -9,6 +9,23 @@ const MOCK_PLAYS = 3482;
 const MOCK_FOLLOWER_BASE = 118;
 
 export default function DashboardPage() {
+  if (!ME) {
+    return (
+      <div className="mx-auto max-w-md px-4 py-20 text-center">
+        <h1 className="text-2xl font-black text-ink">아직 등록된 아티스트가 없어요</h1>
+        <p className="mt-2 text-sm text-muted">
+          음원을 업로드하면 대시보드에서 현황을 확인할 수 있어요.
+        </p>
+        <Link
+          href="/dashboard/upload/track"
+          className="mt-6 inline-block rounded-full bg-accent px-6 py-3 text-sm font-bold text-white hover:bg-accent-strong"
+        >
+          🎵 음원 업로드하기
+        </Link>
+      </div>
+    );
+  }
+
   const myOrders = mockOrders.filter((o) => getProductById(o.productId)?.artistId === ME.id);
   const totalRevenue = myOrders.reduce((sum, o) => sum + o.price, 0);
   const totalOrders = myOrders.length;

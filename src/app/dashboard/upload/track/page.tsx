@@ -36,7 +36,7 @@ export default function TrackUploadPage() {
 
   // step 1
   const [title, setTitle] = useState("");
-  const [artist, setArtist] = useState(ME.name);
+  const [artist, setArtist] = useState(ME?.name ?? "");
   const [genre, setGenre] = useState("");
   const [description, setDescription] = useState("");
   const [previewAudioUrl, setPreviewAudioUrl] = useState<string | undefined>(undefined);
@@ -45,7 +45,7 @@ export default function TrackUploadPage() {
   const [minPrice, setMinPrice] = useState("0");
 
   // step 3
-  const [rightsDetail, setRightsDetail] = useState<RightsDetail>(() => defaultRightsDetail(ME.name));
+  const [rightsDetail, setRightsDetail] = useState<RightsDetail>(() => defaultRightsDetail(ME?.name ?? ""));
 
   // step 4
   const [consentChecked, setConsentChecked] = useState(false);
@@ -65,7 +65,7 @@ export default function TrackUploadPage() {
   const goToStep1Next = () => setStep(2);
 
   const handleSelfOwned = () => {
-    setRightsDetail(defaultRightsDetail(artist || ME.name));
+    setRightsDetail(defaultRightsDetail(artist || ME?.name || ""));
     setCameFromSkip(true);
     setStep(4);
   };

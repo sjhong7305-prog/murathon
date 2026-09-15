@@ -33,10 +33,10 @@ function formatSentAt(iso: string) {
 export default function ArtistMyPage() {
   const [tab, setTab] = useState<Tab>("messages");
 
-  const [name, setName] = useState(ME.name);
-  const [bio, setBio] = useState(ME.introduction);
+  const [name, setName] = useState(ME?.name ?? "");
+  const [bio, setBio] = useState(ME?.introduction ?? "");
   const [genres, setGenres] = useState<string[]>(
-    ME.genre.split("/").map((g) => g.trim()).filter(Boolean)
+    ME?.genre.split("/").map((g) => g.trim()).filter(Boolean) ?? []
   );
   const [snsLink, setSnsLink] = useState("");
   const [profileSaved, setProfileSaved] = useState(false);
@@ -48,6 +48,7 @@ export default function ArtistMyPage() {
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
 
   useEffect(() => {
+    if (!ME) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate sent broadcast history from localStorage post-mount
     setBroadcasts(getBroadcasts(ME.id));
     const savedIntroduction = getLocalIntroduction(ME.id);
@@ -55,6 +56,23 @@ export default function ArtistMyPage() {
       setBio(savedIntroduction);
     }
   }, []);
+
+  if (!ME) {
+    return (
+      <div className="mx-auto max-w-md px-4 py-20 text-center">
+        <h1 className="text-2xl font-black text-ink">아직 등록된 아티스트가 없어요</h1>
+        <p className="mt-2 text-sm text-muted">
+          음원을 업로드하면 마이페이지가 활성화돼요.
+        </p>
+        <Link
+          href="/dashboard/upload/track"
+          className="mt-6 inline-block rounded-full bg-accent px-6 py-3 text-sm font-bold text-white hover:bg-accent-strong"
+        >
+          🎵 음원 업로드하기
+        </Link>
+      </div>
+    );
+  }
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
