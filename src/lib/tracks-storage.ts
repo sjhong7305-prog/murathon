@@ -45,41 +45,42 @@ export interface Track {
   updatedAt: string;
 }
 
-const STORAGE_KEY = "muraton-tracks";
+export type NewTrackInput = Omit<Track, "id" | "createdAt" | "updatedAt" | "rightsStatus">;
 
-function readAll(): Track[] {
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
+export async function getTracks(): Promise<Track[]> {
+  const res = await fetch("/api/tracks");
+  if (!res.ok) throw new Error("트랙 목록을 불러오지 못했어요.");
+  return res.json();
 }
 
-function writeAll(tracks: Track[]) {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(tracks));
+export async function getTrackById(id: string): Promise<Track | undefined> {
+  const res = await fetch(`/api/tracks/${id}`);
+  if (res.status === 404) return undefined;
+  if (!res.ok) throw new Error("트랙을 불러오지 못했어요.");
+  return res.json();
 }
 
-export function getTracks(): Track[] {
-  return readAll();
+export async function addTrack(track: NewTrackInput): Promise<Track> {
+  const res = await fetch("/api/tracks", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(track),
+  });
+  if (!res.ok) throw new Error("트랙 업로드에 실패했어요.");
+  return res.json();
 }
 
-export function getTrackById(id: string): Track | undefined {
-  return readAll().find((t) => t.id === id);
-}
-
-export function addTrack(track: Track) {
-  const tracks = readAll();
-  tracks.unshift(track);
-  writeAll(tracks);
-}
-
-export function updateTrack(id: string, updates: Partial<Track>) {
-  const tracks = readAll();
-  const next = tracks.map((t) =>
-    t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t
-  );
-  writeAll(next);
+export async function updateTrack(
+  id: string,
+  updates: { rightsDetail: RightsDetail }
+): Promise<Track> {
+  const res = await fetch(`/api/tracks/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updates),
+  });
+  if (!res.ok) throw new Error("트랙 수정에 실패했어요.");
+  return res.json();
 }
 
 /**
@@ -96,8 +97,4 @@ export function computeRightsStatus(detail: RightsDetail): RightsStatus {
   if (statuses.some((s) => s === "unknown")) return "pending_review";
   if (statuses.some((s) => s !== "none")) return "trust_registered";
   return "clear";
-}
-
-export function generateTrackId() {
-  return `TRK-${Date.now().toString(36).toUpperCase()}`;
 }

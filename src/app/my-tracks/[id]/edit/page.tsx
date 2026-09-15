@@ -24,23 +24,42 @@ export default function EditTrackRightsPage() {
   const [track, setTrack] = useState<Track | null | undefined>(undefined);
   const [rightsDetail, setRightsDetail] = useState<RightsDetail | null>(null);
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const found = getTrackById(id);
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate track from localStorage post-mount
-    setTrack(found ?? null);
-    if (found) setRightsDetail(found.rightsDetail);
+    getTrackById(id)
+      .then((found) => {
+        setTrack(found ?? null);
+        if (found) setRightsDetail(found.rightsDetail);
+      })
+      .catch((err) => setError(err instanceof Error ? err.message : "불러오기에 실패했어요."));
   }, [id]);
 
-  const handleSave = () => {
-    if (!rightsDetail || !track) return;
-    const rightsStatus = computeRightsStatus(rightsDetail);
-    updateTrack(track.id, { rightsDetail, rightsStatus });
-    setTrack({ ...track, rightsDetail, rightsStatus });
-    setSaved(true);
+  const handleSave = async () => {
+    if (!rightsDetail || !track || saving) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const updated = await updateTrack(track.id, { rightsDetail });
+      setTrack(updated);
+      setRightsDetail(updated.rightsDetail);
+      setSaved(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "저장에 실패했어요.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  if (track === undefined) return null;
+  if (track === undefined) {
+    if (!error) return null;
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-20 text-center">
+        <p className="text-sm font-semibold text-rose-600">{error}</p>
+      </div>
+    );
+  }
 
   if (track === null) {
     return (
@@ -75,14 +94,16 @@ export default function EditTrackRightsPage() {
         <div className="mt-6 flex flex-col gap-4">
           <RightsForm value={rightsDetail} onChange={(v) => { setRightsDetail(v); setSaved(false); }} />
 
+          {error && <p className="text-sm font-semibold text-rose-600">{error}</p>}
           {saved && <p className="text-sm font-semibold text-emerald-700">저장했어요.</p>}
 
           <button
             type="button"
             onClick={handleSave}
-            className="rounded-full bg-accent px-6 py-3 text-sm font-bold text-white transition hover:bg-accent-strong"
+            disabled={saving}
+            className="rounded-full bg-accent px-6 py-3 text-sm font-bold text-white transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-40"
           >
-            저장하기
+            {saving ? "저장 중..." : "저장하기"}
           </button>
         </div>
       )}

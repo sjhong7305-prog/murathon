@@ -7,7 +7,6 @@ import { GENRES } from "@/lib/genres";
 import {
   addTrack,
   computeRightsStatus,
-  generateTrackId,
   type RightsDetail,
   type RightsStatus,
   type Track,
@@ -51,6 +50,8 @@ export default function TrackUploadPage() {
   // step 4
   const [consentChecked, setConsentChecked] = useState(false);
   const [submittedTrack, setSubmittedTrack] = useState<Track | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const handleAudioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
@@ -74,27 +75,29 @@ export default function TrackUploadPage() {
     setStep(3);
   };
 
-  const handleSubmit = () => {
-    if (!consentChecked) return;
-    const now = new Date().toISOString();
-    const track: Track = {
-      id: generateTrackId(),
-      title,
-      artist,
-      genre,
-      description,
-      previewAudioUrl,
-      pricingType,
-      minPrice: Number(minPrice) || 0,
-      previewLimitSeconds: 30,
-      rightsStatus: computeRightsStatus(rightsDetail),
-      rightsDetail,
-      consentConfirmedAt: now,
-      createdAt: now,
-      updatedAt: now,
-    };
-    addTrack(track);
-    setSubmittedTrack(track);
+  const handleSubmit = async () => {
+    if (!consentChecked || submitting) return;
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const created = await addTrack({
+        title,
+        artist,
+        genre,
+        description,
+        previewAudioUrl,
+        pricingType,
+        minPrice: Number(minPrice) || 0,
+        previewLimitSeconds: 30,
+        rightsDetail,
+        consentConfirmedAt: new Date().toISOString(),
+      });
+      setSubmittedTrack(created);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "업로드에 실패했어요.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (submittedTrack) {
@@ -105,9 +108,7 @@ export default function TrackUploadPage() {
           ✓
         </div>
         <h1 className="text-2xl font-black text-ink">업로드가 완료됐어요</h1>
-        <p className="mt-2 text-muted">
-          “{submittedTrack.title}”이(가) 등록됐어요. (프로토타입 목업, 실제로 저장되지 않습니다)
-        </p>
+        <p className="mt-2 text-muted">“{submittedTrack.title}”이(가) 등록됐어요.</p>
 
         <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-line bg-surface px-4 py-2 text-sm font-bold text-ink">
           <span>{badge.emoji}</span>
@@ -355,8 +356,10 @@ export default function TrackUploadPage() {
           </label>
 
           <p className="text-xs text-muted">
-            프로토타입이므로 실제로 파일이 저장되거나 정산에 연동되지 않습니다.
+            미리듣기 오디오는 아직 실제 파일 저장소에 올라가지 않아요 (이 브라우저 탭에서만 재생돼요). 나머지 정보는 실제 DB에 저장됩니다.
           </p>
+
+          {submitError && <p className="text-sm font-semibold text-rose-600">{submitError}</p>}
 
           <div className="flex gap-3">
             <button
@@ -369,10 +372,10 @@ export default function TrackUploadPage() {
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={!consentChecked}
+              disabled={!consentChecked || submitting}
               className="flex-1 rounded-full bg-accent px-6 py-3 text-sm font-bold text-white transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-40"
             >
-              제출하기
+              {submitting ? "제출 중..." : "제출하기"}
             </button>
           </div>
         </div>

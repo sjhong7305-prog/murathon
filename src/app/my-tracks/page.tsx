@@ -21,10 +21,12 @@ const STATUS_BADGE: Record<RightsStatus, { emoji: string; label: string; classNa
 
 export default function MyTracksPage() {
   const [tracks, setTracks] = useState<Track[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate track list from localStorage post-mount
-    setTracks(getTracks());
+    getTracks()
+      .then(setTracks)
+      .catch((err) => setError(err instanceof Error ? err.message : "불러오기에 실패했어요."));
   }, []);
 
   return (
@@ -44,7 +46,9 @@ export default function MyTracksPage() {
         </Link>
       </div>
 
-      {tracks === null ? null : tracks.length === 0 ? (
+      {error ? (
+        <p className="mt-16 text-center text-sm font-semibold text-rose-600">{error}</p>
+      ) : tracks === null ? null : tracks.length === 0 ? (
         <p className="mt-16 text-center text-sm text-muted">
           아직 업로드한 트랙이 없어요.
         </p>

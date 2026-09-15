@@ -1,0 +1,29 @@
+// use prisma-8
+
+enum PricingType {
+  pwyw
+  fixed
+}
+
+enum RightsStatus {
+  clear
+  pending_review
+  trust_registered
+}
+
+model Track {
+  id                  String            @default(uuid()) @id
+  title               String
+  artist              String
+  genre               String
+  description         String
+  previewAudioUrl     String?
+  pricingType         PricingType
+  minPrice            Int
+  previewLimitSeconds Int               @default(30)
+  rightsStatus        RightsStatus
+  rightsDetail        Json
+  consentConfirmedAt  TimestamptzString
+  createdAt           TimestamptzString @default(now())
+  updatedAt           temporal.updatedAtString()
+}
