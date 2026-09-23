@@ -3,29 +3,22 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatWon } from "@/lib/format";
-import { getTracks, type RightsStatus, type Track } from "@/lib/tracks-storage";
-
-const STATUS_BADGE: Record<RightsStatus, { emoji: string; label: string; className: string }> = {
-  clear: { emoji: "🟢", label: "바로 판매 가능", className: "text-emerald-700 bg-emerald-400/10" },
-  pending_review: {
-    emoji: "🟡",
-    label: "확인이 더 필요해요",
-    className: "text-amber-700 bg-amber-400/10",
-  },
-  trust_registered: {
-    emoji: "🔵",
-    label: "협회 정산 연동 필요",
-    className: "text-sky-700 bg-sky-400/10",
-  },
-};
+import { useAuth } from "@/context/auth-context";
+import { LoginRequired } from "@/components/login-required";
+import { getTracks, type Track } from "@/lib/tracks-storage";
+import { getRightsStatusBadge } from "@/lib/rights-status-badge";
 
 export default function MyTracksPage() {
+  const { loading, activeArtistId } = useAuth();
   const [tracks, setTracks] = useState<Track[] | null>(null);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate track list from localStorage post-mount
-    setTracks(getTracks());
-  }, []);
+    if (!activeArtistId) return;
+    getTracks(activeArtistId).then(setTracks);
+  }, [activeArtistId]);
+
+  if (loading) return null;
+  if (!activeArtistId) return <LoginRequired />;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
@@ -51,7 +44,7 @@ export default function MyTracksPage() {
       ) : (
         <div className="mt-8 flex flex-col gap-3">
           {tracks.map((track) => {
-            const badge = STATUS_BADGE[track.rightsStatus];
+            const badge = getRightsStatusBadge(track.rightsStatus);
             return (
               <Link
                 key={track.id}

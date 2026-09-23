@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useCart } from "@/context/cart-context";
-import { getArtistById, getProductById } from "@/lib/data";
+import { useCatalog } from "@/lib/use-catalog";
 import { formatWon } from "@/lib/format";
 import { CoverArt } from "@/components/cover-art";
 
 export default function CartPage() {
   const { items, removeItem, updatePrice, updateQuantity, totalPrice } = useCart();
+  const catalog = useCatalog();
 
   if (items.length === 0) {
     return (
@@ -24,15 +25,17 @@ export default function CartPage() {
     );
   }
 
+  if (!catalog) return null;
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
       <h1 className="mb-6 text-2xl font-black text-ink">장바구니</h1>
 
       <div className="flex flex-col gap-4">
         {items.map((item) => {
-          const product = getProductById(item.productId);
+          const product = catalog.getProductById(item.productId);
           if (!product) return null;
-          const artist = getArtistById(product.artistId);
+          const artist = catalog.getArtistById(product.artistId);
           const isMerch = product.type === "merch";
 
           return (

@@ -1,50 +1,112 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { usePathname } from "next/navigation";
 
-export type SessionType = "artist" | "follower" | null;
+export interface SessionArtist {
+  id: string;
+  name: string;
+  slug: string;
+}
 
-const STORAGE_KEY = "muraton-session";
+interface SessionResponse {
+  isLoggedIn: boolean;
+  userId?: string;
+  nickname?: string;
+  email?: string;
+  artists?: SessionArtist[];
+  activeArtistId?: string | null;
+}
 
 interface AuthContextValue {
-  session: SessionType;
-  login: (type: "artist" | "follower") => void;
+  isLoggedIn: boolean;
+  loading: boolean;
+  userId: string | null;
+  nickname: string | null;
+  email: string | null;
+  artists: SessionArtist[];
+  activeArtistId: string | null;
+  activeArtist: SessionArtist | null;
   logout: () => void;
+  switchToFan: () => Promise<void>;
+  switchToArtist: (artistId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<SessionType>(null);
-  const [hydrated, setHydrated] = useState(false);
+  const pathname = usePathname();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [nickname, setNickname] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
+  const [artists, setArtists] = useState<SessionArtist[]>([]);
+  const [activeArtistId, setActiveArtistId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const applySession = (data: SessionResponse) => {
+    setIsLoggedIn(data.isLoggedIn);
+    setUserId(data.userId ?? null);
+    setNickname(data.nickname ?? null);
+    setEmail(data.email ?? null);
+    setArtists(data.artists ?? []);
+    setActiveArtistId(data.activeArtistId ?? null);
+  };
 
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw === "artist" || raw === "follower") {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate session from localStorage post-mount to avoid SSR mismatch
-        setSession(raw);
-      }
-    } catch {
-      // ignore corrupted storage
-    }
-    setHydrated(true);
-  }, []);
+    fetch("/api/session")
+      .then((res) => (res.ok ? res.json() : { isLoggedIn: false }))
+      .then(applySession)
+      .catch(() => setIsLoggedIn(false))
+      .finally(() => setLoading(false));
+    // Re-checks on every navigation so header/mode state stays correct after actions
+    // (signup, login, creating an artist profile, switching mode) that redirect client-side.
+  }, [pathname]);
 
-  useEffect(() => {
-    if (!hydrated) return;
-    if (session) {
-      window.localStorage.setItem(STORAGE_KEY, session);
-    } else {
-      window.localStorage.removeItem(STORAGE_KEY);
-    }
-  }, [session, hydrated]);
+  const logout = () => {
+    setIsLoggedIn(false);
+    setUserId(null);
+    setNickname(null);
+    setEmail(null);
+    setArtists([]);
+    setActiveArtistId(null);
+    fetch("/api/logout", { method: "POST" }).catch(() => {});
+  };
 
-  const login = (type: "artist" | "follower") => setSession(type);
-  const logout = () => setSession(null);
+  const switchToFan = async () => {
+    await fetch("/api/session/active-artist", { method: "DELETE" }).catch(() => {});
+    setActiveArtistId(null);
+  };
+
+  const switchToArtist = async (artistId: string) => {
+    const res = await fetch("/api/session/active-artist", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ artistId }),
+    });
+    if (res.ok) setActiveArtistId(artistId);
+  };
+
+  const activeArtist = artists.find((a) => a.id === activeArtistId) ?? null;
 
   return (
-    <AuthContext.Provider value={{ session, login, logout }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider
+      value={{
+        isLoggedIn,
+        loading,
+        userId,
+        nickname,
+        email,
+        artists,
+        activeArtistId,
+        activeArtist,
+        logout,
+        switchToFan,
+        switchToArtist,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
   );
 }
 

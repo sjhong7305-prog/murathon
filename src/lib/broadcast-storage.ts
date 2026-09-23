@@ -1,42 +1,74 @@
 export type BroadcastTarget = "all" | "amount" | "region";
+export type NoticeVisibility = "PUBLIC" | "SUPPORTER" | "SUBSCRIBER";
+
+export interface BroadcastMedia {
+  id: string;
+  url: string;
+  width: number | null;
+  height: number | null;
+}
 
 export interface Broadcast {
   id: string;
+  title: string | null;
   message: string;
   target: BroadcastTarget;
   targetDetail?: string;
+  visibility: NoticeVisibility;
+  pinned: boolean;
+  reachCount: number;
   sentAt: string;
+  media: BroadcastMedia[];
 }
 
-const STORAGE_KEY = "muraton-broadcasts";
-
-type BroadcastMap = Record<string, Broadcast[]>;
-
-function readMap(): BroadcastMap {
+export async function getBroadcasts(artistId: string): Promise<Broadcast[]> {
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : {};
+    const res = await fetch(`/api/artists/${artistId}/broadcasts`);
+    if (!res.ok) return [];
+    return await res.json();
   } catch {
-    return {};
+    return [];
   }
 }
 
-export function getBroadcasts(artistId: string): Broadcast[] {
-  return readMap()[artistId] ?? [];
+export async function addBroadcast(
+  artistId: string,
+  broadcast: Pick<Broadcast, "title" | "message" | "target" | "targetDetail" | "visibility" | "pinned"> & {
+    media: { url: string; width?: number; height?: number }[];
+  }
+): Promise<Broadcast> {
+  const res = await fetch(`/api/artists/${artistId}/broadcasts`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(broadcast),
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new Error(data?.error ?? "공지를 보내지 못했어요.");
+  }
+  return data as Broadcast;
 }
 
-export function addBroadcast(
+export async function updateBroadcast(
   artistId: string,
-  broadcast: Pick<Broadcast, "message" | "target" | "targetDetail">
-) {
-  const map = readMap();
-  const existing = map[artistId] ?? [];
-  const entry: Broadcast = {
-    id: `BC-${Date.now().toString(36).toUpperCase()}`,
-    sentAt: new Date().toISOString(),
-    ...broadcast,
-  };
-  map[artistId] = [entry, ...existing];
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
-  return entry;
+  broadcastId: string,
+  patch: Partial<Pick<Broadcast, "title" | "message" | "visibility" | "pinned">>
+): Promise<void> {
+  const res = await fetch(`/api/artists/${artistId}/broadcasts/${broadcastId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new Error(data?.error ?? "공지를 수정하지 못했어요.");
+  }
+}
+
+export async function deleteBroadcast(artistId: string, broadcastId: string): Promise<void> {
+  const res = await fetch(`/api/artists/${artistId}/broadcasts/${broadcastId}`, { method: "DELETE" });
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new Error(data?.error ?? "공지를 삭제하지 못했어요.");
+  }
 }

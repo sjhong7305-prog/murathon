@@ -1,0 +1,243 @@
+{
+  "users": [
+    {
+      "id": "user-a1",
+      "email": "wonder-static@murathon.demo",
+      "passwordHash": "$2b$10$aYMIgWSbDPIr2LtJyAs3ReqWE7X/naSsvFMYQnYMLMVLDxzl9xnhq",
+      "role": "ARTIST",
+      "failedLoginCount": 0,
+      "lockedUntil": null,
+      "createdAt": "2026-09-15T07:24:05.555Z"
+    },
+    {
+      "id": "user-a2",
+      "email": "gasan-youth@murathon.demo",
+      "passwordHash": "$2b$10$aYMIgWSbDPIr2LtJyAs3ReqWE7X/naSsvFMYQnYMLMVLDxzl9xnhq",
+      "role": "ARTIST",
+      "failedLoginCount": 0,
+      "lockedUntil": null,
+      "createdAt": "2026-09-15T07:24:05.579Z"
+    },
+    {
+      "id": "user-a3",
+      "email": "haepari@murathon.demo",
+      "passwordHash": "$2b$10$aYMIgWSbDPIr2LtJyAs3ReqWE7X/naSsvFMYQnYMLMVLDxzl9xnhq",
+      "role": "ARTIST",
+      "failedLoginCount": 0,
+      "lockedUntil": null,
+      "createdAt": "2026-09-15T07:24:05.591Z"
+    },
+    {
+      "id": "user-a4",
+      "email": "yeoldae@murathon.demo",
+      "passwordHash": "$2b$10$aYMIgWSbDPIr2LtJyAs3ReqWE7X/naSsvFMYQnYMLMVLDxzl9xnhq",
+      "role": "ARTIST",
+      "failedLoginCount": 0,
+      "lockedUntil": null,
+      "createdAt": "2026-09-15T07:24:05.605Z"
+    },
+    {
+      "id": "user-a5",
+      "email": "j-flow@murathon.demo",
+      "passwordHash": "$2b$10$aYMIgWSbDPIr2LtJyAs3ReqWE7X/naSsvFMYQnYMLMVLDxzl9xnhq",
+      "role": "ARTIST",
+      "failedLoginCount": 0,
+      "lockedUntil": null,
+      "createdAt": "2026-09-15T07:24:05.621Z"
+    },
+    {
+      "id": "cmu2dvf9q0000lt7e0s2qo2z5",
+      "email": "admin@murathon.demo",
+      "passwordHash": "$2b$10$oXWDxAJA0R2GtoaaBzVlhu3J2Ys0qzRHmDdDsPJ2dNx0QxRptAVqq",
+      "role": "ADMIN",
+      "failedLoginCount": 0,
+      "lockedUntil": null,
+      "createdAt": "2026-09-15T08:01:53.678Z"
+    },
+    {
+      "id": "cmu5h73b000004j7e3lr7x22p",
+      "email": "sjhong7305@gmail.com",
+      "passwordHash": "$2b$10$tqIlIaGNQxrmJr0StJSGbOjPLPiWwNSA643jhBaPt6A4qfKWP0u8S",
+      "role": "FAN",
+      "failedLoginCount": 0,
+      "lockedUntil": null,
+      "createdAt": "2026-09-17T11:58:15.420Z"
+    }
+  ],
+  "artists": [
+    {
+      "id": "a5",
+      "userId": "user-a5",
+      "slug": "j-flow",
+      "name": "제이플로우",
+      "genre": "힙합 / 솔로",
+      "genreTags": [
+        "hip-hop-rap"
+      ],
+      "location": "서울",
+      "tagline": "혼자 쓰고, 혼자 부르고, 혼자 완성한다",
+      "introduction": "비트 프로듀싱부터 랩까지 전부 혼자 만드는 솔로 힙합 아티스트. 자취방 작업실에서 녹음한 로파이 힙합으로 입소문을 타기 시작했다.",
+      "coverColor": "from-lime-500 to-emerald-600",
+      "imageUrl": "https://picsum.photos/seed/j-flow/600/600",
+      "bannerImage": "https://picsum.photos/seed/j-flow-banner/1600/500",
+      "snsLink": "https://instagram.com/jflow",
+      "youtubeLink": null,
+      "websiteLink": null,
+      "checkoutQuestion": "제이플로우 가사 중 가장 와닿았던 한 줄은?",
+      "subscriptionPriceMonthly": 4900,
+      "subscriptionPriceYearly": 49000,
+      "subscriptionBenefits": [
+        "신곡 자동 발매 알림",
+        "백카탈로그 무제한 감상",
+        "데모·리믹스 등 구독자 전용 트랙",
+        "얼리 액세스",
+        "굿즈 할인",
+        "비하인드 콘텐츠"
+      ],
+      "createdAt": "2026-09-15T07:24:05.633Z",
+      "updatedAt": "2026-09-16T08:41:54.972Z"
+    },
+    {
+      "id": "a1",
+      "userId": "user-a1",
+      "slug": "wonder-static",
+      "name": "원더 스태틱",
+      "genre": "드림팝 / 슈게이징",
+      "genreTags": [
+        "alternative",
+        "rock"
+      ],
+      "location": "서울",
+      "tagline": "잔상처럼 남는 기타 노이즈",
+      "introduction": "2019년 홍대에서 결성된 3인조 드림팝 밴드. 몽환적인 기타 톤과 나른한 보컬로 소규모 라이브 씬에서 꾸준히 팬을 늘려왔다. 두 번째 정규 앨범 《잔상》을 자체 레이블로 발매했다.",
+      "coverColor": "from-violet-500 to-fuchsia-500",
+      "imageUrl": "https://picsum.photos/seed/wonder-static/600/600",
+      "bannerImage": "https://picsum.photos/seed/wonder-static-banner/1600/500",
+      "snsLink": "https://instagram.com/wonderstatic",
+      "youtubeLink": "https://youtube.com/@wonderstatic",
+      "websiteLink": "https://wonderstatic.example.com",
+      "checkoutQuestion": "가장 좋아하는 곡은 무엇인가요?",
+      "subscriptionPriceMonthly": 4900,
+      "subscriptionPriceYearly": 49000,
+      "subscriptionBenefits": [
+        "신곡 자동 발매 알림",
+        "백카탈로그 무제한 감상",
+        "데모·리믹스 등 구독자 전용 트랙",
+        "얼리 액세스",
+        "굿즈 할인",
+        "비하인드 콘텐츠"
+      ],
+      "createdAt": "2026-09-15T07:24:05.573Z",
+      "updatedAt": "2026-09-16T08:41:54.909Z"
+    },
+    {
+      "id": "a2",
+      "userId": "user-a2",
+      "slug": "gasan-youth",
+      "name": "가산유스",
+      "genre": "펑크 / 개러지 록",
+      "genreTags": [
+        "punk",
+        "rock"
+      ],
+      "location": "인천",
+      "tagline": "3분 안에 끝내는 분노",
+      "introduction": "공단 지역을 오가며 자란 멤버들이 만든 로파이 펑크 밴드. 직설적인 가사와 거친 사운드가 특징이며, 라이브 클럽을 중심으로 활동한다.",
+      "coverColor": "from-orange-500 to-rose-500",
+      "imageUrl": "https://picsum.photos/seed/gasan-youth/600/600",
+      "bannerImage": "https://picsum.photos/seed/gasan-youth-banner/1600/500",
+      "snsLink": "https://instagram.com/gasanyouth",
+      "youtubeLink": "https://youtube.com/@gasanyouth",
+      "websiteLink": null,
+      "checkoutQuestion": "가산유스에게 하고 싶은 한마디는?",
+      "subscriptionPriceMonthly": 4900,
+      "subscriptionPriceYearly": 49000,
+      "subscriptionBenefits": [
+        "신곡 자동 발매 알림",
+        "백카탈로그 무제한 감상",
+        "데모·리믹스 등 구독자 전용 트랙",
+        "얼리 액세스",
+        "굿즈 할인",
+        "비하인드 콘텐츠"
+      ],
+      "createdAt": "2026-09-15T07:24:05.587Z",
+      "updatedAt": "2026-09-16T08:41:54.922Z"
+    },
+    {
+      "id": "a3",
+      "userId": "user-a3",
+      "slug": "haepari",
+      "name": "해파리",
+      "genre": "포크 / 어쿠스틱",
+      "genreTags": [
+        "folk",
+        "acoustic"
+      ],
+      "location": "제주",
+      "tagline": "파도 소리를 닮은 노래",
+      "introduction": "제주 바닷가 마을에서 활동하는 싱어송라이터 듀오. 어쿠스틱 기타와 첼로로 계절의 감정을 담은 곡을 쓴다.",
+      "coverColor": "from-teal-400 to-cyan-600",
+      "imageUrl": "https://picsum.photos/seed/haepari/600/600",
+      "bannerImage": "https://picsum.photos/seed/haepari-banner/1600/500",
+      "snsLink": null,
+      "youtubeLink": null,
+      "websiteLink": "https://haepari.example.com",
+      "checkoutQuestion": "요즘 어떤 계절 감정을 느끼고 있나요?",
+      "subscriptionPriceMonthly": 4900,
+      "subscriptionPriceYearly": 49000,
+      "subscriptionBenefits": [
+        "신곡 자동 발매 알림",
+        "백카탈로그 무제한 감상",
+        "데모·리믹스 등 구독자 전용 트랙",
+        "얼리 액세스",
+        "굿즈 할인",
+        "비하인드 콘텐츠"
+      ],
+      "createdAt": "2026-09-15T07:24:05.598Z",
+      "updatedAt": "2026-09-16T08:41:54.936Z"
+    },
+    {
+      "id": "a4",
+      "userId": "user-a4",
+      "slug": "yeoldae",
+      "name": "열대야",
+      "genre": "신스팝 / 일렉트로닉",
+      "genreTags": [
+        "electronic"
+      ],
+      "location": "부산",
+      "tagline": "한여름 밤의 신스",
+      "introduction": "부산 출신 신스팝 프로젝트. 80년대 신스 사운드와 현대적인 프로덕션을 결합해 여름밤의 정서를 그린다.",
+      "coverColor": "from-amber-400 to-pink-500",
+      "imageUrl": "https://picsum.photos/seed/yeoldae/600/600",
+      "bannerImage": "https://picsum.photos/seed/yeoldae-banner/1600/500",
+      "snsLink": "https://instagram.com/yeoldae",
+      "youtubeLink": "https://youtube.com/@yeoldae",
+      "websiteLink": "https://yeoldae.example.com",
+      "checkoutQuestion": "이 곡과 함께 떠오르는 여름 기억이 있다면?",
+      "subscriptionPriceMonthly": 4900,
+      "subscriptionPriceYearly": 49000,
+      "subscriptionBenefits": [
+        "신곡 자동 발매 알림",
+        "백카탈로그 무제한 감상",
+        "데모·리믹스 등 구독자 전용 트랙",
+        "얼리 액세스",
+        "굿즈 할인",
+        "비하인드 콘텐츠"
+      ],
+      "createdAt": "2026-09-15T07:24:05.615Z",
+      "updatedAt": "2026-09-16T08:41:54.951Z"
+    }
+  ],
+  "fans": [
+    {
+      "id": "cmu5h73b100014j7ezws1aehz",
+      "userId": "cmu5h73b000004j7e3lr7x22p",
+      "nickname": "콩성준",
+      "collectionPrivacy": "PUBLIC",
+      "createdAt": "2026-09-17T11:58:15.420Z",
+      "updatedAt": "2026-09-17T12:00:29.976Z"
+    }
+  ],
+  "dumpedAt": "2026-09-17T12:55:06.949Z"
+}

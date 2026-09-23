@@ -1,122 +1,95 @@
 import { notFound } from "next/navigation";
-import Image from "next/image";
-import { AtSign, PlayCircle, Globe } from "lucide-react";
-import { artists, getArtistBySlug, getProductsByArtist } from "@/lib/data";
+import Link from "next/link";
+import { getArtistBySlug, getProductsByArtist } from "@/lib/data";
+import { getSession } from "@/lib/auth";
+import { getArtistFeedPage } from "@/lib/artist-feed";
+import { getArtistNoticeBox } from "@/lib/artist-notices";
+import { prisma } from "@/lib/prisma";
+import { DEFAULT_THEME } from "@/lib/artist-theme";
+import { computeArtistThemeStyle } from "@/lib/artist-theme-vars";
 import { ProductCard } from "@/components/product-card";
-import { SupportersSection } from "@/components/supporters-section";
-import { ArtistIntroduction } from "@/components/artist-introduction";
-import { ArtistFeed } from "@/components/artist-feed";
+import { FeedCard } from "@/components/feed-card";
+import { NoticeBox } from "@/components/notice-box";
+import { formatDate } from "@/lib/format";
 
-export function generateStaticParams() {
-  return artists.map((artist) => ({ slug: artist.slug }));
-}
-
-export default async function ArtistPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+export default async function ArtistHomeTab({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const artist = getArtistBySlug(slug);
+  const artist = await getArtistBySlug(slug);
   if (!artist) notFound();
 
-  const artistProducts = getProductsByArtist(artist.id);
-  const links = artist.externalLinks;
-  const hasLinks = links && (links.sns || links.youtube || links.website);
+  const session = await getSession();
+  const isOwner = Boolean(session?.user.artistMemberships.some((m) => m.artistId === artist.id));
+  const theme = artist.theme ?? DEFAULT_THEME;
+  const { readableCardText } = computeArtistThemeStyle(theme);
+
+  const [products, feedPage, upcomingTicket, noticeBox] = await Promise.all([
+    getProductsByArtist(artist.id),
+    getArtistFeedPage(artist.id, session?.user.id ?? null, isOwner, null, 3),
+    prisma.product.findFirst({
+      where: { artistId: artist.id, type: "TICKET", eventAt: { gte: new Date() } },
+      orderBy: { eventAt: "asc" },
+    }),
+    getArtistNoticeBox(artist.id, 3),
+  ]);
+
+  const latestRelease = products.find((p) => p.type === "album" || p.type === "track");
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10">
-      <div className="relative">
-        <div
-          className={`h-40 w-full overflow-hidden rounded-2xl bg-gradient-to-br sm:h-56 ${artist.coverColor}`}
-        >
-          {artist.bannerImage && (
-            <Image
-              src={artist.bannerImage}
-              alt=""
-              fill
-              priority
-              sizes="100vw"
-              className="object-cover"
-            />
-          )}
-        </div>
+    <div className="flex flex-col gap-10">
+      {(noticeBox.length > 0 || isOwner) && (
+        <NoticeBox artistId={artist.id} artistSlug={slug} isOwner={isOwner} initialNotices={noticeBox} />
+      )}
 
-        <div className="absolute -bottom-10 left-6 h-20 w-20 overflow-hidden rounded-full border-4 border-surface bg-surface shadow-md sm:h-28 sm:w-28">
-          {artist.imageUrl ? (
-            <Image
-              src={artist.imageUrl}
-              alt={artist.name}
-              fill
-              priority
-              sizes="112px"
-              className="object-cover"
-            />
-          ) : (
-            <div className={`h-full w-full bg-gradient-to-br ${artist.coverColor}`} />
-          )}
-        </div>
-      </div>
-
-      <div className="mt-14 sm:mt-16">
-        <p className="text-sm font-semibold text-accent-strong">
-          {artist.genre} · {artist.location}
-        </p>
-        <h1 className="mt-1 text-3xl font-black text-ink">{artist.name}</h1>
-        <p className="mt-1 text-muted">{artist.tagline}</p>
-        <ArtistIntroduction artistId={artist.id} fallback={artist.introduction} />
-
-        {hasLinks && (
-          <div className="mt-4 flex items-center gap-2">
-            {links.sns && (
-              <a
-                href={links.sns}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`${artist.name} SNS`}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-line bg-surface text-muted transition hover:border-accent/50 hover:text-accent-strong"
-              >
-                <AtSign size={16} />
-              </a>
-            )}
-            {links.youtube && (
-              <a
-                href={links.youtube}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`${artist.name} YouTube`}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-line bg-surface text-muted transition hover:border-accent/50 hover:text-accent-strong"
-              >
-                <PlayCircle size={16} />
-              </a>
-            )}
-            {links.website && (
-              <a
-                href={links.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`${artist.name} 공식 홈페이지`}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-line bg-surface text-muted transition hover:border-accent/50 hover:text-accent-strong"
-              >
-                <Globe size={16} />
-              </a>
-            )}
+      {latestRelease && (
+        <section>
+          <h2 className="mb-3 text-lg font-bold" style={{ color: "var(--artist-text)" }}>
+            최신 발매작
+          </h2>
+          <div className="max-w-xs">
+            <ProductCard product={latestRelease} theme={{ card: theme.colors.card, text: readableCardText, accent: theme.colors.accent }} />
           </div>
-        )}
-      </div>
+        </section>
+      )}
 
-      <section className="mt-12">
-        <h2 className="mb-4 text-lg font-bold text-ink">음원 · 굿즈 · 티켓</h2>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-          {artistProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      </section>
+      {upcomingTicket && (
+        <section>
+          <h2 className="mb-3 text-lg font-bold" style={{ color: "var(--artist-text)" }}>
+            다가오는 공연
+          </h2>
+          <Link
+            href={`/products/${upcomingTicket.id}`}
+            className="block rounded-2xl border p-4 transition hover:opacity-90"
+            style={{ borderColor: "color-mix(in srgb, var(--artist-text) 15%, transparent)", backgroundColor: "var(--artist-card)" }}
+          >
+            <p className="font-bold" style={{ color: "var(--artist-card-text)" }}>
+              {upcomingTicket.eventName ?? upcomingTicket.title}
+            </p>
+            <p className="mt-1 text-sm opacity-75" style={{ color: "var(--artist-card-text)" }}>
+              {upcomingTicket.eventAt && formatDate(upcomingTicket.eventAt.toISOString())}
+              {upcomingTicket.venue ? ` · ${upcomingTicket.venue}` : ""}
+            </p>
+          </Link>
+        </section>
+      )}
 
-      <ArtistFeed posts={artist.feedPosts ?? []} />
+      {feedPage.posts.length > 0 && (
+        <section>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-lg font-bold" style={{ color: "var(--artist-text)" }}>
+              최근 피드
+            </h2>
+            <Link href={`/artists/${slug}/feed`} className="text-sm font-semibold" style={{ color: "var(--artist-accent)" }}>
+              더 보기 →
+            </Link>
+          </div>
+          <div className="flex flex-col gap-4">
+            {feedPage.posts.map((p) => (
+              <FeedCard key={p.id} post={p} />
+            ))}
+          </div>
+        </section>
+      )}
 
-      <SupportersSection artistId={artist.id} baseSupporters={artist.supporters ?? []} />
     </div>
   );
 }

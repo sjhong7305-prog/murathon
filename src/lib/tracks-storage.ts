@@ -28,8 +28,15 @@ export interface RightsDetail {
 
 export type RightsStatus = "clear" | "pending_review" | "trust_registered";
 
+export interface StoryPrompts {
+  origin: string;
+  struggle: string;
+  audience: string;
+}
+
 export interface Track {
   id: string;
+  artistId: string;
   title: string;
   artist: string;
   genre: string;
@@ -40,46 +47,115 @@ export interface Track {
   previewLimitSeconds: number;
   rightsStatus: RightsStatus;
   rightsDetail: RightsDetail;
+  storyPrompts?: StoryPrompts;
   consentConfirmedAt: string;
   createdAt: string;
   updatedAt: string;
 }
 
-const STORAGE_KEY = "muraton-tracks";
+export interface NewTrackInput {
+  title: string;
+  artist: string;
+  genre: string;
+  description: string;
+  previewAudioUrl?: string;
+  pricingType: "pwyw" | "fixed";
+  minPrice: number;
+  previewLimitSeconds: number;
+  rightsStatus: RightsStatus;
+  rightsDetail: RightsDetail;
+  storyPrompts?: StoryPrompts;
+  consentConfirmedAt: string;
+}
 
-function readAll(): Track[] {
+export async function getTracks(artistId: string): Promise<Track[]> {
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
+    const res = await fetch(`/api/tracks?artistId=${encodeURIComponent(artistId)}`);
+    if (!res.ok) return [];
+    return await res.json();
   } catch {
     return [];
   }
 }
 
-function writeAll(tracks: Track[]) {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(tracks));
+export async function getTrackById(id: string): Promise<Track | undefined> {
+  try {
+    const res = await fetch(`/api/tracks/${id}`);
+    if (!res.ok) return undefined;
+    return await res.json();
+  } catch {
+    return undefined;
+  }
 }
 
-export function getTracks(): Track[] {
-  return readAll();
+/** Throws with a user-facing Korean message on any non-2xx response — never hands the caller a malformed "track". */
+async function readTrackResponse(res: Response): Promise<Track> {
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.error === "forbidden" || body?.error === "unauthorized"
+      ? "이 트랙을 등록/수정할 권한이 없어요."
+      : "저장하지 못했어요. 잠시 후 다시 시도해주세요.");
+  }
+  return res.json();
 }
 
-export function getTrackById(id: string): Track | undefined {
-  return readAll().find((t) => t.id === id);
+export async function addTrack(artistId: string, input: NewTrackInput): Promise<Track> {
+  const res = await fetch("/api/tracks", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ artistId, ...input }),
+  });
+  return readTrackResponse(res);
 }
 
-export function addTrack(track: Track) {
-  const tracks = readAll();
-  tracks.unshift(track);
-  writeAll(tracks);
+export async function updateTrack(
+  id: string,
+  updates: Partial<Pick<Track, "rightsDetail" | "rightsStatus">>
+): Promise<Track> {
+  const res = await fetch(`/api/tracks/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updates),
+  });
+  return readTrackResponse(res);
 }
 
-export function updateTrack(id: string, updates: Partial<Track>) {
-  const tracks = readAll();
-  const next = tracks.map((t) =>
-    t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t
-  );
-  writeAll(next);
+export interface TrackReleaseInput {
+  title: string;
+  artist: string;
+  genre: string;
+  description: string;
+  imageUrl?: string;
+  previewAudioUrl?: string;
+  durationSec?: number;
+  minPrice: number;
+  suggestedPrice: number;
+  rightsDetail: RightsDetail;
+  storyPrompts?: StoryPrompts;
+  consentConfirmedAt: string;
+}
+
+export interface TrackReleaseResult {
+  track: Track;
+  productId: string;
+}
+
+/**
+ * The "음원 업로드" wizard's submit call — creates both the rights-registration Track (still
+ * feeds the backoffice 권리검토 queue and /tracks/[id]) and a real, purchasable Product in one
+ * request. See src/app/api/artists/[id]/tracks/route.ts for why the two aren't linked by an FK.
+ */
+export async function createTrackRelease(artistId: string, input: TrackReleaseInput): Promise<TrackReleaseResult> {
+  const res = await fetch(`/api/artists/${artistId}/tracks`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.error ?? "저장하지 못했어요. 잠시 후 다시 시도해주세요.");
+  }
+  return res.json();
 }
 
 /**
@@ -96,8 +172,4 @@ export function computeRightsStatus(detail: RightsDetail): RightsStatus {
   if (statuses.some((s) => s === "unknown")) return "pending_review";
   if (statuses.some((s) => s !== "none")) return "trust_registered";
   return "clear";
-}
-
-export function generateTrackId() {
-  return `TRK-${Date.now().toString(36).toUpperCase()}`;
 }

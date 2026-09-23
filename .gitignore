@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# user-uploaded content — real storage (S3/etc.) should replace this before scaling
+/public/uploads
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

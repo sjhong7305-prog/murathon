@@ -6,30 +6,23 @@ export interface PurchaseRecord {
   purchasedAt: string;
 }
 
-const STORAGE_KEY = "muraton-purchases";
-
-function readAll(): PurchaseRecord[] {
+export async function getPurchases(): Promise<PurchaseRecord[]> {
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
+    const res = await fetch("/api/orders?mine=true");
+    if (!res.ok) return [];
+    return await res.json();
   } catch {
     return [];
   }
 }
 
-export function getPurchases(): PurchaseRecord[] {
-  return readAll();
-}
-
-export function addPurchases(
-  records: Array<Pick<PurchaseRecord, "productId" | "artistId" | "price" | "quantity">>
-) {
-  const existing = readAll();
-  const purchasedAt = new Date().toISOString();
-  const next = [...existing, ...records.map((r) => ({ ...r, purchasedAt }))];
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-}
-
-export function hasPurchased(productId: string): boolean {
-  return readAll().some((r) => r.productId === productId);
+export async function hasPurchased(productId: string): Promise<boolean> {
+  try {
+    const res = await fetch(`/api/orders?productId=${encodeURIComponent(productId)}`);
+    if (!res.ok) return false;
+    const data = await res.json();
+    return Boolean(data.hasPurchased);
+  } catch {
+    return false;
+  }
 }

@@ -8,79 +8,74 @@ export interface CommunityComment {
   createdAt: string;
 }
 
+export interface AttachedProduct {
+  id: string;
+  title: string;
+  type: "album" | "track" | "merch" | "ticket";
+  coverColor: string;
+  imageUrl?: string;
+  previewAudioUrl?: string;
+  suggestedPrice: number;
+  artistName: string;
+}
+
 export interface CommunityPost {
   id: string;
   title: string;
   body: string;
   author: string;
   authorType: AuthorType;
+  tags: string[];
+  attachedProduct: AttachedProduct | null;
   createdAt: string;
   comments: CommunityComment[];
 }
 
-const POSTS_KEY = "muraton-community-posts";
-const COMMENTS_KEY = "muraton-community-comments";
-
-function readLocalPosts(): CommunityPost[] {
+export async function getLocalPosts(): Promise<CommunityPost[]> {
   try {
-    const raw = window.localStorage.getItem(POSTS_KEY);
-    return raw ? JSON.parse(raw) : [];
+    const res = await fetch("/api/community/posts");
+    if (!res.ok) return [];
+    return await res.json();
   } catch {
     return [];
   }
 }
 
-function readCommentsMap(): Record<string, CommunityComment[]> {
+export async function getPost(postId: string): Promise<CommunityPost | null> {
   try {
-    const raw = window.localStorage.getItem(COMMENTS_KEY);
-    return raw ? JSON.parse(raw) : {};
+    const res = await fetch(`/api/community/posts/${postId}`);
+    if (!res.ok) return null;
+    return await res.json();
   } catch {
-    return {};
+    return null;
   }
 }
 
-export function getLocalPosts(): CommunityPost[] {
-  return readLocalPosts();
-}
-
-export function addLocalPost(input: {
+export async function addLocalPost(input: {
   title: string;
   body: string;
   author: string;
   authorType: AuthorType;
-}): CommunityPost {
-  const post: CommunityPost = {
-    id: `local-${Date.now().toString(36)}`,
-    title: input.title.trim(),
-    body: input.body.trim(),
-    author: input.author.trim() || "익명",
-    authorType: input.authorType,
-    createdAt: new Date().toISOString(),
-    comments: [],
-  };
-  const posts = readLocalPosts();
-  window.localStorage.setItem(POSTS_KEY, JSON.stringify([post, ...posts]));
-  return post;
+  tags?: string[];
+  attachedProductId?: string;
+  artistId?: string;
+}): Promise<CommunityPost> {
+  const res = await fetch("/api/community/posts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  return res.json();
 }
 
-export function getLocalComments(postId: string): CommunityComment[] {
-  return readCommentsMap()[postId] ?? [];
-}
-
-export function addLocalComment(
+export async function addLocalComment(
   postId: string,
   input: { author: string; authorType: AuthorType; message: string }
-): CommunityComment {
-  const comment: CommunityComment = {
-    id: `local-${Date.now().toString(36)}`,
-    author: input.author.trim() || "익명",
-    authorType: input.authorType,
-    message: input.message.trim(),
-    createdAt: new Date().toISOString(),
-  };
-  const map = readCommentsMap();
-  const existing = map[postId] ?? [];
-  map[postId] = [...existing, comment];
-  window.localStorage.setItem(COMMENTS_KEY, JSON.stringify(map));
-  return comment;
+): Promise<CommunityComment> {
+  const res = await fetch(`/api/community/posts/${postId}/comments`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  return res.json();
 }

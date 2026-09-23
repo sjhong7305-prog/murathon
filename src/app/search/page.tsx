@@ -1,4 +1,4 @@
-import { artists, products } from "@/lib/data";
+import { getAllArtists, getAllProducts } from "@/lib/data";
 import { ProductCard } from "@/components/product-card";
 import { ArtistCard } from "@/components/artist-card";
 import type { ProductType } from "@/lib/types";
@@ -24,6 +24,8 @@ export default async function SearchPage({
   const query = (q ?? "").trim().toLowerCase();
   const activeType = type && TYPE_GROUPS[type] ? type : undefined;
   const allowedTypes = activeType ? TYPE_GROUPS[activeType] : undefined;
+
+  const [artists, products] = await Promise.all([getAllArtists(), getAllProducts()]);
 
   const matchedArtists =
     query && !activeType

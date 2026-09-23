@@ -1,20 +1,7 @@
 export type ProductType = "album" | "track" | "merch" | "ticket";
+export type ProductStatus = "published" | "unpublished";
 
-export type ArtistPostCategory =
-  | "녹음 비하인드"
-  | "공연 영상"
-  | "악기 연주"
-  | "가사 소개"
-  | "작업실 일상";
-
-export interface ArtistPost {
-  id: string;
-  category: ArtistPostCategory;
-  content: string;
-  mediaUrl?: string;
-  createdAt: string;
-  likeCount: number;
-}
+import type { ArtistTheme } from "./artist-theme";
 
 export interface ArtistExternalLinks {
   sns?: string;
@@ -36,8 +23,13 @@ export interface Artist {
   bannerImage?: string;
   externalLinks?: ArtistExternalLinks;
   checkoutQuestion?: string;
+  subscriptionPriceMonthly?: number;
+  subscriptionPriceYearly?: number;
+  subscriptionBenefits?: string[];
+  membershipEnabled?: boolean;
   supporters?: string[];
-  feedPosts?: ArtistPost[];
+  payoutStatus?: "NONE" | "PENDING" | "VERIFIED";
+  theme?: ArtistTheme | null;
 }
 
 export interface SecretContent {
@@ -45,19 +37,45 @@ export interface SecretContent {
   message: string;
 }
 
+export interface ArtistMemberSummary {
+  id: string;
+  name: string;
+  imageUrl?: string;
+  roleLabel?: string;
+}
+
+export interface AlbumTrack {
+  id: string;
+  trackNumber: number;
+  title: string;
+  durationSec: number;
+  isTitle: boolean;
+}
+
 export interface Product {
   id: string;
   artistId: string;
   type: ProductType;
+  status: ProductStatus;
   title: string;
   description: string;
   format?: string;
+  genre?: string;
   minPrice: number;
   suggestedPrice: number;
   coverColor: string;
   imageUrl?: string;
   previewAudioUrl?: string;
   secretContent?: SecretContent;
+  eventName?: string;
+  venue?: string;
+  eventAt?: string;
+  includedAlbumId?: string;
+  longDescription?: string;
+  releaseDate?: string;
+  credits?: string;
+  durationSec?: number;
+  tracks?: AlbumTrack[];
 }
 
 export interface CartItem {

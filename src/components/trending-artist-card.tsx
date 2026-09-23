@@ -3,10 +3,8 @@ import Image from "next/image";
 import { Artist } from "@/lib/types";
 import { getProductsByArtist } from "@/lib/data";
 
-export function TrendingArtistCard({ artist }: { artist: Artist }) {
-  const albums = getProductsByArtist(artist.id)
-    .filter((p) => p.imageUrl)
-    .slice(0, 3);
+export async function TrendingArtistCard({ artist }: { artist: Artist }) {
+  const albums = (await getProductsByArtist(artist.id)).filter((p) => p.imageUrl).slice(0, 3);
 
   return (
     <Link

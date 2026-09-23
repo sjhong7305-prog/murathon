@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/cart-context";
@@ -9,12 +10,26 @@ import { CategoryNav } from "./category-nav";
 
 export function Header() {
   const { totalCount } = useCart();
-  const { session, logout } = useAuth();
+  const { isLoggedIn, nickname, artists, activeArtist, switchToFan, switchToArtist, logout } =
+    useAuth();
   const router = useRouter();
+  const [modeMenuOpen, setModeMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
     router.push("/");
+  };
+
+  const handleSwitchToFan = async () => {
+    setModeMenuOpen(false);
+    await switchToFan();
+    router.push("/");
+  };
+
+  const handleSwitchToArtist = async (artistId: string, slug: string) => {
+    setModeMenuOpen(false);
+    await switchToArtist(artistId);
+    router.push(`/artist/${slug}/dashboard`);
   };
 
   return (
@@ -27,24 +42,107 @@ export function Header() {
         <SearchBar className="max-w-xs flex-1 sm:max-w-sm" />
 
         <nav className="ml-auto flex shrink-0 items-center gap-5 text-sm text-ink">
-          {session === "artist" && (
+          {isLoggedIn && activeArtist && (
             <>
-              <Link href="/mypage/artist" className="hidden hover:text-accent-strong lg:inline">
-                아티스트 마이페이지
-              </Link>
-              <Link href="/dashboard" className="hidden hover:text-accent-strong sm:inline">
+              <Link
+                href={`/artist/${activeArtist.slug}/dashboard`}
+                className="hidden hover:text-accent-strong sm:inline"
+              >
                 아티스트 대시보드
+              </Link>
+              <Link
+                href={`/artists/${activeArtist.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden hover:text-accent-strong lg:inline"
+              >
+                내 페이지 보기
               </Link>
             </>
           )}
 
-          {session === "follower" && (
-            <Link href="/mypage/follower" className="hidden hover:text-accent-strong sm:inline">
-              팔로워 마이페이지
-            </Link>
+          {isLoggedIn && !activeArtist && (
+            <>
+              <Link href="/mypage/follower" className="hidden hover:text-accent-strong sm:inline">
+                내 컬렉션
+              </Link>
+              <Link href="/feed" className="hidden hover:text-accent-strong sm:inline">
+                피드
+              </Link>
+              <Link href="/activity" className="hidden hover:text-accent-strong lg:inline">
+                활동
+              </Link>
+            </>
           )}
 
-          {session === null && (
+          {isLoggedIn && (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setModeMenuOpen((v) => !v)}
+                className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 font-semibold hover:border-black/20"
+              >
+                <span className="max-w-[8rem] truncate">
+                  {activeArtist ? `🎸 ${activeArtist.name}` : `🎧 ${nickname ?? "내 계정"}`}
+                </span>
+              </button>
+
+              {modeMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setModeMenuOpen(false)} />
+                  <div className="absolute right-0 z-20 mt-2 w-56 rounded-xl border border-line bg-surface p-1.5 shadow-lg">
+                    <button
+                      type="button"
+                      onClick={handleSwitchToFan}
+                      className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold hover:bg-cream ${
+                        !activeArtist ? "text-accent-strong" : "text-ink"
+                      }`}
+                    >
+                      🎧 팬 모드
+                    </button>
+
+                    {artists.length > 0 && (
+                      <div className="my-1 border-t border-line" />
+                    )}
+                    {artists.map((artist) => (
+                      <button
+                        key={artist.id}
+                        type="button"
+                        onClick={() => handleSwitchToArtist(artist.id, artist.slug)}
+                        className={`flex w-full items-center gap-2 truncate rounded-lg px-3 py-2 text-left text-sm font-semibold hover:bg-cream ${
+                          activeArtist?.id === artist.id ? "text-accent-strong" : "text-ink"
+                        }`}
+                      >
+                        🎸 {artist.name}
+                      </button>
+                    ))}
+
+                    {activeArtist && (
+                      <Link
+                        href={`/artists/${activeArtist.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => setModeMenuOpen(false)}
+                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold text-ink hover:bg-cream"
+                      >
+                        🔗 내 아티스트 페이지 보기
+                      </Link>
+                    )}
+                    <div className="my-1 border-t border-line" />
+                    <Link
+                      href="/artist/new"
+                      onClick={() => setModeMenuOpen(false)}
+                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold text-ink hover:bg-cream"
+                    >
+                      + 아티스트 페이지 만들기
+                    </Link>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {!isLoggedIn && (
             <>
               <Link href="/login" className="hidden hover:text-accent-strong sm:inline">
                 로그인
@@ -55,7 +153,7 @@ export function Header() {
             </>
           )}
 
-          {session !== null && (
+          {isLoggedIn && (
             <button type="button" onClick={handleLogout} className="hover:text-accent-strong">
               로그아웃
             </button>
@@ -72,11 +170,7 @@ export function Header() {
         </nav>
       </div>
 
-      <div className="border-t border-line">
-        <div className="mx-auto max-w-7xl px-4">
-          <CategoryNav />
-        </div>
-      </div>
+      <CategoryNav />
     </header>
   );
 }

@@ -1,66 +1,42 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useActionState } from "react";
 import Link from "next/link";
-import { useAuth } from "@/context/auth-context";
+import { useSearchParams } from "next/navigation";
+import { loginAction, type LoginActionState } from "./actions";
 
-type LoginType = "fan" | "artist";
+const initialState: LoginActionState = {};
+
+function LoginMessage() {
+  const searchParams = useSearchParams();
+  const message = searchParams.get("message");
+  if (!message) return null;
+  return (
+    <p className="mt-4 rounded-lg border border-accent/30 bg-accent/5 px-3 py-2 text-sm font-semibold text-accent-strong">
+      🔒 {message}
+    </p>
+  );
+}
 
 export default function LoginPage() {
-  const router = useRouter();
-  const { login } = useAuth();
-  const [loginType, setLoginType] = useState<LoginType>("fan");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    login(loginType === "artist" ? "artist" : "follower");
-    router.push(loginType === "artist" ? "/dashboard" : "/");
-  };
+  const [state, formAction, pending] = useActionState(loginAction, initialState);
 
   return (
     <div className="mx-auto max-w-md px-4 py-16">
-      <p className="text-sm font-semibold text-accent-strong">
-        {loginType === "artist" ? "🎸 Artist Login" : "🎧 Fan Login"}
-      </p>
+      <p className="text-sm font-semibold text-accent-strong">🎧 MU:RATHON Login</p>
       <h1 className="mt-1 text-2xl font-black text-ink">로그인</h1>
-      <p className="mt-2 text-sm text-muted">MU:RATHON에서 다시 만나요.</p>
+      <Suspense fallback={null}>
+        <LoginMessage />
+      </Suspense>
 
-      <div className="mt-6 grid grid-cols-2 gap-2 rounded-full border border-line bg-surface p-1">
-        <button
-          type="button"
-          onClick={() => setLoginType("fan")}
-          className={`rounded-full py-2 text-sm font-bold transition ${
-            loginType === "fan"
-              ? "bg-accent text-white"
-              : "text-muted hover:text-ink"
-          }`}
-        >
-          팬 로그인
-        </button>
-        <button
-          type="button"
-          onClick={() => setLoginType("artist")}
-          className={`rounded-full py-2 text-sm font-bold transition ${
-            loginType === "artist"
-              ? "bg-accent text-white"
-              : "text-muted hover:text-ink"
-          }`}
-        >
-          아티스트 로그인
-        </button>
-      </div>
-
-      <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
+      <form action={formAction} className="mt-6 flex flex-col gap-4">
         <div>
           <label className="mb-1 block text-sm text-muted">이메일</label>
           <input
             required
             type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            name="email"
+            autoComplete="username"
             className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-ink outline-none focus:border-accent"
             placeholder="you@example.com"
           />
@@ -70,22 +46,25 @@ export default function LoginPage() {
           <input
             required
             type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            name="password"
+            autoComplete="current-password"
             className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-ink outline-none focus:border-accent"
             placeholder="비밀번호를 입력해주세요"
           />
         </div>
 
-        <p className="text-xs text-muted">
-          프로토타입이므로 실제 인증이 이루어지지 않습니다.
-        </p>
+        {state?.error && (
+          <p className="text-sm font-semibold text-rose-600" role="alert">
+            {state.error}
+          </p>
+        )}
 
         <button
           type="submit"
-          className="mt-2 rounded-full bg-accent px-6 py-3 text-sm font-bold text-white transition hover:bg-accent-strong"
+          disabled={pending}
+          className="mt-2 rounded-full bg-accent px-6 py-3 text-sm font-bold text-white transition hover:bg-accent-strong disabled:opacity-60"
         >
-          Sign In
+          {pending ? "로그인 중..." : "로그인"}
         </button>
       </form>
 

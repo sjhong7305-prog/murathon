@@ -1,13 +1,13 @@
 import Link from "next/link";
-import { artists, products } from "@/lib/data";
+import { getAllArtists, getAllProducts } from "@/lib/data";
 import { GENRES } from "@/lib/genres";
 import { ArtistCard } from "@/components/artist-card";
 import { ProductCard } from "@/components/product-card";
 import { TrendingArtistCard } from "@/components/trending-artist-card";
 import { HeroBanner } from "@/components/hero-banner";
-import { FanMessageFeed } from "@/components/fan-message-feed";
 
-export default function Home() {
+export default async function Home() {
+  const [artists, products] = await Promise.all([getAllArtists(), getAllProducts()]);
   const featuredAlbums = products.filter((p) => p.type === "album").slice(0, 8);
   const upcomingShows = products.filter((p) => p.type === "ticket");
   const trending = [...artists]
@@ -17,14 +17,6 @@ export default function Home() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-10">
       <HeroBanner />
-
-      <section className="mb-14">
-        <h2 className="mb-1 text-lg font-bold text-ink">💌 방금 도착한 메시지</h2>
-        <p className="mb-4 text-sm text-muted">
-          지금 이 순간에도 누군가 아티스트에게 마음을 전하고 있어요.
-        </p>
-        <FanMessageFeed />
-      </section>
 
       <section className="mb-14">
         <h2 className="mb-1 text-lg font-bold text-ink">🔥 요즘 뜨는 아티스트</h2>

@@ -1,0 +1,676 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum CollectionPrivacy {
+  PUBLIC
+  PRIVATE
+}
+
+enum PayoutStatus {
+  NONE
+  PENDING
+  VERIFIED
+}
+
+enum ArtistMemberRole {
+  OWNER
+  MEMBER
+}
+
+enum ProductType {
+  ALBUM
+  TRACK
+  MERCH
+  TICKET
+}
+
+enum ProductStatus {
+  PUBLISHED
+  UNPUBLISHED
+}
+
+enum PricingType {
+  PWYW
+  FIXED
+}
+
+enum RightsStatus {
+  CLEAR
+  PENDING_REVIEW
+  TRUST_REGISTERED
+}
+
+enum AuthorType {
+  ARTIST
+  FOLLOWER
+}
+
+enum ArtistPostCategory {
+  RECORDING_BEHIND
+  LIVE_VIDEO
+  INSTRUMENT_PLAY
+  LYRICS_INTRO
+  STUDIO_LIFE
+  ETC
+}
+
+enum ArtistPostVisibility {
+  PUBLIC
+  SUPPORTER
+  SUBSCRIBER
+}
+
+enum ArtistPostMediaType {
+  IMAGE
+  VIDEO
+}
+
+enum HeroFeatureLabel {
+  BEST_OF_WEEK
+  TRENDING
+}
+
+enum HeroTextPosition {
+  BOTTOM_LEFT
+  BOTTOM_CENTER
+  BOTTOM_RIGHT
+  TOP_LEFT
+  TOP_CENTER
+  TOP_RIGHT
+  CENTER
+}
+
+enum BroadcastTarget {
+  ALL
+  AMOUNT
+  REGION
+}
+
+enum ShippingStatus {
+  PAID
+  SHIPPING
+  DELIVERED
+}
+
+enum SubscriptionTier {
+  MONTHLY
+  YEARLY
+}
+
+model User {
+  id                String            @id @default(cuid())
+  email             String            @unique
+  passwordHash      String
+  nickname          String
+  isAdmin           Boolean           @default(false)
+  collectionPrivacy CollectionPrivacy @default(PUBLIC)
+  failedLoginCount  Int               @default(0)
+  lockedUntil       DateTime?
+  createdAt         DateTime          @default(now())
+
+  ownedArtists      Artist[]       @relation("ArtistOwner")
+  artistMemberships ArtistMember[]
+  sessions          Session[]
+  orders            Order[]
+  comments          ProductComment[]
+  posts             CommunityPost[]
+  postComments      CommunityComment[]
+  auditLogs         AuditLog[]
+
+  artistFollows      Follow[]
+  subscriptions      Subscription[]
+  artistPostComments ArtistPostComment[]
+  artistPostLikes    ArtistPostLike[]
+  supporterNotes     SupporterNote[]
+  fanFollowing       FanFollow[]         @relation("FanFollowFollower")
+  fanFollowers       FanFollow[]         @relation("FanFollowFollowing")
+  playlists          Playlist[]
+
+  @@map("users")
+}
+
+/**
+ * A fan following an artist — required (with a purchase) to unlock commenting on that artist's feed posts ("Paid Voice").
+ */
+model Follow {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  artistId  String
+  artist    Artist   @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, artistId])
+  @@map("follows")
+}
+
+/**
+ * One fan's subscription to one artist. Prototype only — no real billing, just a mock active record.
+ */
+model Subscription {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  artistId  String
+  artist    Artist           @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  tier      SubscriptionTier
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@unique([userId, artistId])
+  @@map("subscriptions")
+}
+
+/**
+ * Comment on an artist feed post. artistId is kept redundantly (alongside the real postId FK)
+ * so eligibility checks (follow + purchase) can scope by artist without a join through the post.
+ */
+model ArtistPostComment {
+  id             String     @id @default(cuid())
+  postId         String
+  post           ArtistPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  artistId       String
+  artist         Artist     @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  authorUserId   String
+  author         User       @relation(fields: [authorUserId], references: [id], onDelete: Cascade)
+  authorNickname String
+  message        String
+  createdAt      DateTime   @default(now())
+
+  @@map("artist_post_comments")
+}
+
+/**
+ * An artist's feed post (behind-the-scenes video/image, studio life, etc). visibility lets the
+ * artist choose per post whether it's public, gated to anyone who bought something from them
+ * ("supporter"), or gated to active subscribers only.
+ */
+model ArtistPost {
+  id             String               @id @default(cuid())
+  artistId       String
+  artist         Artist               @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  category       ArtistPostCategory   @default(ETC)
+  content        String
+  visibility     ArtistPostVisibility @default(PUBLIC)
+  /// Which band member posted this — null falls back to displaying the artist as a whole.
+  authorMemberId String?
+  authorMember   ArtistMember?        @relation(fields: [authorMemberId], references: [id], onDelete: SetNull)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @default(now()) @updatedAt
+
+  media    ArtistPostMedia[]
+  likes    ArtistPostLike[]
+  comments ArtistPostComment[]
+
+  @@map("artist_posts")
+}
+
+/** One image/video attached to an ArtistPost, in display order. Replaces the old single mediaUrl/mediaType pair. */
+model ArtistPostMedia {
+  id          String              @id @default(cuid())
+  postId      String
+  post        ArtistPost          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  type        ArtistPostMediaType
+  url         String
+  width       Int?
+  height      Int?
+  durationSec Int?
+  position    Int
+
+  @@unique([postId, position])
+  @@map("artist_post_media")
+}
+
+/** A fan's like on an artist post — real per-user state (the old ArtistPost.likeCount was a cache with no per-user tracking at all). */
+model ArtistPostLike {
+  id        String     @id @default(cuid())
+  postId    String
+  post      ArtistPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now())
+
+  @@unique([postId, userId])
+  @@map("artist_post_likes")
+}
+
+/**
+ * A fan's "why I bought this" note attached to one purchased product, shown in their public Collection.
+ */
+model SupporterNote {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  message   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, productId])
+  @@map("supporter_notes")
+}
+
+/**
+ * Fan-to-fan follow, powers the cross-fan "Follow Feed" of recent purchases + supporter notes.
+ */
+model FanFollow {
+  id              String   @id @default(cuid())
+  followerUserId  String
+  follower        User     @relation("FanFollowFollower", fields: [followerUserId], references: [id], onDelete: Cascade)
+  followingUserId String
+  following       User     @relation("FanFollowFollowing", fields: [followingUserId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+
+  @@unique([followerUserId, followingUserId])
+  @@map("fan_follows")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String
+  actor      User     @relation(fields: [actorId], references: [id])
+  action     String
+  targetType String
+  targetId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("sessions")
+}
+
+model Artist {
+  id                       String       @id @default(cuid())
+  userId                   String
+  user                     User         @relation("ArtistOwner", fields: [userId], references: [id], onDelete: Cascade)
+  slug                     String       @unique
+  name                     String
+  genre                    String
+  genreTags                String[]
+  location                 String
+  tagline                  String
+  introduction             String
+  coverColor               String
+  imageUrl                 String?
+  bannerImage              String?
+  snsLink                  String?
+  youtubeLink              String?
+  websiteLink              String?
+  checkoutQuestion         String?
+  /// Validated, server-generated shape only — see src/lib/artist-theme.ts's ArtistTheme type and validateThemeInput(). Never trust raw reads of this column for rendering without re-validating.
+  theme                    Json?
+  payoutStatus             PayoutStatus @default(NONE)
+  subscriptionPriceMonthly Int?     @default(4900)
+  subscriptionPriceYearly  Int?     @default(49000)
+  subscriptionBenefits     String[] @default(["신곡 자동 발매 알림", "백카탈로그 무제한 감상", "데모·리믹스 등 구독자 전용 트랙", "얼리 액세스", "굿즈 할인", "비하인드 콘텐츠"])
+  /// Off by default — the membership/subscribe section is only shown on the public artist page once the artist explicitly turns it on.
+  membershipEnabled        Boolean  @default(false)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  members       ArtistMember[]
+  products      Product[]
+  tracks        Track[]
+  broadcasts    Broadcast[]
+  supporters    Supporter[]
+  primaryOrders Order[]             @relation("PrimaryArtistOrders")
+  heroFeatures  HeroFeature[]
+  follows       Follow[]
+  subscriptions Subscription[]
+  postComments   ArtistPostComment[]
+  posts          ArtistPost[]
+  communityPosts CommunityPost[]
+
+  @@map("artists")
+}
+
+/**
+ * Membership of a user on an artist profile. Created with role OWNER when the profile is made
+ * (via signup intent or /artist/new); "member" is reserved for future band co-management.
+ * "Is this user an artist?" is decided by presence here, not by a role field on User.
+ * displayName/imageUrl/roleLabel are optional per-member public-facing profile fields (e.g. "보컬
+ * OO") used to attribute feed posts to an individual member rather than the artist as a whole —
+ * null until the member (today, realistically just the OWNER) fills them in; falls back to the
+ * artist's own name/image when unset.
+ */
+model ArtistMember {
+  id          String           @id @default(cuid())
+  artistId    String
+  artist      Artist           @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        ArtistMemberRole @default(OWNER)
+  displayName String?
+  imageUrl    String?
+  roleLabel   String?
+  createdAt   DateTime         @default(now())
+
+  posts ArtistPost[]
+
+  @@unique([artistId, userId])
+  @@map("artist_members")
+}
+
+model HeroFeature {
+  id             String           @id @default(cuid())
+  artistId       String?
+  artist         Artist?          @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  customName     String?
+  customSubtitle String?
+  label          HeroFeatureLabel
+  imageUrl       String
+  sortOrder      Int              @default(0)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@map("hero_features")
+}
+
+/**
+ * Singleton row (fixed id) holding the hero section's editorial copy and text placement,
+ * editable from the backoffice without a deploy.
+ */
+model HeroSettings {
+  id        String           @id @default("singleton")
+  headline  String           @default("아티스트가 자생하는 건강한 음악 생태계")
+  subtext   String?          @default("아직 소문나기 전, 그 아티스트의 다음 이야기를 가장 먼저 만나보세요.")
+  position  HeroTextPosition @default(BOTTOM_LEFT)
+  updatedAt DateTime         @updatedAt
+
+  @@map("hero_settings")
+}
+
+model Product {
+  id              String      @id @default(cuid())
+  artistId        String
+  artist          Artist      @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  type            ProductType
+  status          ProductStatus @default(PUBLISHED)
+  title           String
+  description     String
+  format          String?
+  /// ALBUM/TRACK only: e.g. "hiphop"/"indie" (Artist.genre is the artist's overall genre; this is per-release).
+  genre           String?
+  minPrice        Int
+  suggestedPrice  Int
+  coverColor      String
+  imageUrl        String?
+  previewAudioUrl String?
+  secretTitle     String?
+  secretMessage   String?
+  /// TICKET only: event date/venue.
+  eventName       String?
+  venue           String?
+  eventAt         DateTime?
+  /// MERCH only: an ALBUM product bundled into this purchase (shows the album under the fan's music tab too).
+  includedAlbumId String?
+  includedAlbum   Product?    @relation("ProductBundle", fields: [includedAlbumId], references: [id])
+  bundledIn       Product[]   @relation("ProductBundle")
+  /// ALBUM/TRACK only: the long-form intro shown on the product page. `description` above stays the short one-liner.
+  longDescription String?
+  releaseDate     DateTime?
+  credits         String?
+  /// TRACK only: the single's own runtime, shown in its one-row "tracklist".
+  durationSec     Int?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  comments       ProductComment[]
+  orderItems     OrderItem[]
+  cartItems      CartItem[]
+  communityPosts CommunityPost[]
+  supporterNotes SupporterNote[]
+  playlistTracks PlaylistTrack[]
+  albumTracks    AlbumTrack[]
+
+  @@map("products")
+}
+
+/**
+ * A track listed under an ALBUM product. Unrelated to the separate rights-registration `Track`
+ * model (used by the artist upload wizard, not tied to purchases) — this one drives the tracklist
+ * on the product page and its preview/full playback follows the parent product's purchase status.
+ */
+model AlbumTrack {
+  id          String  @id @default(cuid())
+  productId   String
+  product     Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  trackNumber Int
+  title       String
+  durationSec Int
+  previewUrl  String?
+  isTitle     Boolean @default(false)
+
+  @@unique([productId, trackNumber])
+  @@map("album_tracks")
+}
+
+model Cart {
+  id        String   @id @default(cuid())
+  guestId   String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id        String  @id @default(cuid())
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  price     Int
+  quantity  Int
+
+  @@unique([cartId, productId])
+  @@map("cart_items")
+}
+
+model Track {
+  id                  String       @id @default(cuid())
+  artistId            String
+  artist              Artist       @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  title               String
+  artistNameSnapshot  String
+  genre               String
+  description         String
+  previewAudioUrl     String?
+  pricingType         PricingType
+  minPrice            Int
+  previewLimitSeconds Int          @default(30)
+  rightsStatus        RightsStatus
+  rightsDetail        Json
+  storyPrompts        Json?
+  consentConfirmedAt  DateTime
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  @@map("tracks")
+}
+
+model Order {
+  id              String   @id @default(cuid())
+  buyerUserId     String?
+  buyer           User?    @relation(fields: [buyerUserId], references: [id])
+  guestId         String?
+  name            String
+  email           String
+  cheerMessage    String?
+  promptQuestion  String?
+  promptAnswer    String?
+  listAsSupporter Boolean  @default(false)
+  primaryArtistId String?
+  primaryArtist   Artist?  @relation("PrimaryArtistOrders", fields: [primaryArtistId], references: [id])
+  total           Int
+  createdAt       DateTime @default(now())
+
+  items OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id                 String  @id @default(cuid())
+  orderId            String
+  order              Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId          String
+  product            Product @relation(fields: [productId], references: [id])
+  titleSnapshot      String
+  artistNameSnapshot String
+  price              Int
+  quantity           Int
+  /// MERCH only: default PAID, admin advances it from the order detail page.
+  shippingStatus     ShippingStatus @default(PAID)
+
+  @@map("order_items")
+}
+
+model ProductComment {
+  id           String   @id @default(cuid())
+  productId    String
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  authorUserId String?
+  author       User?    @relation(fields: [authorUserId], references: [id])
+  nickname     String
+  message      String
+  createdAt    DateTime @default(now())
+
+  @@map("product_comments")
+}
+
+model CommunityPost {
+  id                String     @id @default(cuid())
+  authorUserId      String?
+  author            User?      @relation(fields: [authorUserId], references: [id])
+  authorType        AuthorType
+  authorNickname    String
+  title             String
+  body              String
+  tags              String[]   @default([])
+  attachedProductId String?
+  attachedProduct   Product?   @relation(fields: [attachedProductId], references: [id], onDelete: SetNull)
+  /// Optional — scopes a post to one artist's "커뮤니티" tab. Null keeps the post in the global /community feed only.
+  artistId          String?
+  artist            Artist?    @relation(fields: [artistId], references: [id], onDelete: SetNull)
+  createdAt         DateTime   @default(now())
+
+  comments CommunityComment[]
+
+  @@map("community_posts")
+}
+
+model CommunityComment {
+  id             String        @id @default(cuid())
+  postId         String
+  post           CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorUserId   String?
+  author         User?         @relation(fields: [authorUserId], references: [id])
+  authorType     AuthorType
+  authorNickname String
+  message        String
+  createdAt      DateTime      @default(now())
+
+  @@map("community_comments")
+}
+
+model Broadcast {
+  id           String          @id @default(cuid())
+  artistId     String
+  artist       Artist          @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  /// Null on rows created before the public notice board existed — display falls back to a
+  /// truncated `message`. Required going forward via API validation.
+  title        String?
+  message      String
+  target       BroadcastTarget
+  targetDetail String?
+  /// Who beyond "everyone" can see this on the public notice board (/artists/[slug] home tab,
+  /// /artists/[slug]/notices). Unrelated to `target`, which is about push-style reach at send
+  /// time — a notice can be pushed to "전체 팔로워" and still be SUPPORTER-only to actually view.
+  visibility   ArtistPostVisibility @default(PUBLIC)
+  /// At most one pinned notice per artist — enforced at the application layer (unset-then-set in
+  /// a transaction), not a DB constraint, since Prisma can't express a cross-row partial unique.
+  pinned       Boolean         @default(false)
+  /// Snapshot of recipient count at send time — computed server-side, not recalculated later.
+  reachCount   Int             @default(0)
+  sentAt       DateTime        @default(now())
+
+  media BroadcastMedia[]
+
+  @@map("broadcasts")
+}
+
+/// One image attached to a broadcast, in display order. Max 3 enforced at the API layer.
+model BroadcastMedia {
+  id          String    @id @default(cuid())
+  broadcastId String
+  broadcast   Broadcast @relation(fields: [broadcastId], references: [id], onDelete: Cascade)
+  url         String
+  width       Int?
+  height      Int?
+  position    Int
+
+  @@unique([broadcastId, position])
+  @@map("broadcast_media")
+}
+
+model Supporter {
+  id        String   @id @default(cuid())
+  artistId  String
+  artist    Artist   @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  nickname  String
+  createdAt DateTime @default(now())
+
+  @@unique([artistId, nickname])
+  @@map("supporters")
+}
+
+model Playlist {
+  id          String   @id @default(cuid())
+  ownerUserId String
+  owner       User     @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  coverUrl    String?
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tracks PlaylistTrack[]
+
+  @@map("playlists")
+}
+
+/**
+ * A playlist entry — productId points at a Product (type ALBUM or TRACK), not the separate
+ * rights-registration Track model, since playlists curate what's actually purchasable/purchased.
+ */
+model PlaylistTrack {
+  id         String   @id @default(cuid())
+  playlistId String
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  position   Int
+  addedAt    DateTime @default(now())
+
+  @@unique([playlistId, productId])
+  @@map("playlist_tracks")
+}

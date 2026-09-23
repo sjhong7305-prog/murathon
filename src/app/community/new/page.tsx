@@ -1,44 +1,76 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/auth-context";
 import { addLocalPost, type AuthorType } from "@/lib/community-storage";
-import { artists } from "@/lib/data";
+import { useCatalog } from "@/lib/use-catalog";
 import { AuthorBadge } from "@/components/author-badge";
-
-const ME = artists[0];
+import { TagInput } from "@/components/tag-input";
+import { CoverArt } from "@/components/cover-art";
 
 export default function NewCommunityPostPage() {
+  return (
+    <Suspense fallback={null}>
+      <NewCommunityPostPageInner />
+    </Suspense>
+  );
+}
+
+function NewCommunityPostPageInner() {
   const router = useRouter();
-  const { session } = useAuth();
+  const searchParams = useSearchParams();
+  const scopedArtistId = searchParams.get("artistId") || undefined;
+  const { isLoggedIn, activeArtist, nickname } = useAuth();
+  const catalog = useCatalog();
+  const scopedArtist = scopedArtistId ? catalog?.getArtistById(scopedArtistId) : undefined;
 
   const [authorType, setAuthorType] = useState<AuthorType>(
-    session === "artist" ? "artist" : "follower"
+    activeArtist ? "artist" : "follower"
   );
-  const [author, setAuthor] = useState(session === "artist" ? ME.name : "");
+  const [author, setAuthor] = useState("");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
+  const [attachedProductId, setAttachedProductId] = useState("");
+
+  const attachedProduct = catalog?.products.find((p) => p.id === attachedProductId);
 
   useEffect(() => {
-    if (session !== "follower") return;
+    if (activeArtist) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- prefill artist nickname once the session loads
+      setAuthor(activeArtist.name);
+      return;
+    }
+    if (!isLoggedIn) return;
+    if (nickname) {
+      setAuthor(nickname);
+      return;
+    }
     try {
       const raw = window.sessionStorage.getItem("muraton-last-order");
       if (raw) {
         const order = JSON.parse(raw);
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- prefill nickname from the follower's last completed order
         if (order?.name) setAuthor(order.name);
       }
     } catch {
       // ignore malformed order snapshot
     }
-  }, [session]);
+  }, [activeArtist, isLoggedIn, nickname]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !body.trim()) return;
-    const post = addLocalPost({ title, body, author, authorType });
+    const post = await addLocalPost({
+      title,
+      body,
+      author,
+      authorType,
+      tags,
+      attachedProductId: attachedProductId || undefined,
+      artistId: scopedArtistId,
+    });
     router.push(`/community/${post.id}`);
   };
 
@@ -51,9 +83,14 @@ export default function NewCommunityPostPage() {
         / 글쓰기
       </p>
       <h1 className="mt-1 text-2xl font-black text-ink">새 글 작성</h1>
+      {scopedArtist && (
+        <p className="mt-2 rounded-lg bg-accent/10 px-3 py-2 text-sm font-semibold text-accent-strong">
+          {scopedArtist.name} 커뮤니티에 글을 남겨요.
+        </p>
+      )}
 
       <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
-        {session === null ? (
+        {!isLoggedIn ? (
           <div>
             <label className="mb-1 block text-sm text-muted">작성자 유형</label>
             <div className="grid grid-cols-2 gap-2 rounded-full border border-line bg-surface p-1">
@@ -122,8 +159,48 @@ export default function NewCommunityPostPage() {
           />
         </div>
 
+        <div>
+          <label className="mb-1 block text-sm text-muted">태그 (선택, 최대 5개)</label>
+          <TagInput tags={tags} onChange={setTags} placeholder="#IndiePop 처럼 입력 후 Enter" />
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm text-muted">곡/앨범 공유하기 (선택)</label>
+          <select
+            value={attachedProductId}
+            onChange={(e) => setAttachedProductId(e.target.value)}
+            className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-ink outline-none focus:border-accent"
+          >
+            <option value="">공유하지 않음</option>
+            {catalog?.products.map((p) => {
+              const artist = catalog.getArtistById(p.artistId);
+              return (
+                <option key={p.id} value={p.id}>
+                  {artist?.name ?? "아티스트"} - {p.title}
+                </option>
+              );
+            })}
+          </select>
+
+          {attachedProduct && (
+            <div className="mt-2 flex items-center gap-2.5 rounded-lg border border-line bg-cream p-2">
+              <div className="w-10 shrink-0">
+                <CoverArt
+                  gradient={attachedProduct.coverColor}
+                  label={attachedProduct.title}
+                  imageUrl={attachedProduct.imageUrl}
+                  hideLabel
+                  rounded="rounded-md"
+                  sizes="40px"
+                />
+              </div>
+              <p className="truncate text-sm font-semibold text-ink">{attachedProduct.title}</p>
+            </div>
+          )}
+        </div>
+
         <p className="text-xs text-muted">
-          프로토타입이므로 작성한 글은 이 브라우저에만 저장됩니다.
+          작성한 글은 커뮤니티에 공개로 등록됩니다.
         </p>
 
         <button

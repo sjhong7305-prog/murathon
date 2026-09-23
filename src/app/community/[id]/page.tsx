@@ -4,29 +4,21 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/auth-context";
-import { mockPosts } from "@/lib/mock-community";
 import {
-  getLocalPosts,
-  getLocalComments,
+  getPost,
   addLocalComment,
   type CommunityPost,
   type CommunityComment,
   type AuthorType,
 } from "@/lib/community-storage";
-import { artists } from "@/lib/data";
 import { AuthorBadge } from "@/components/author-badge";
-
-const ME = artists[0];
-
-function formatDateTime(iso: string) {
-  const d = new Date(iso);
-  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-}
+import { MiniTrackCard } from "@/components/community/mini-track-card";
+import { formatDateTime } from "@/lib/format";
 
 export default function CommunityPostDetailPage() {
   const params = useParams<{ id: string }>();
   const postId = params.id;
-  const { session } = useAuth();
+  const { isLoggedIn, activeArtist, nickname } = useAuth();
 
   const [hydrated, setHydrated] = useState<{
     post: CommunityPost | null;
@@ -34,32 +26,38 @@ export default function CommunityPostDetailPage() {
   } | null>(null);
 
   const [authorType, setAuthorType] = useState<AuthorType>(
-    session === "artist" ? "artist" : "follower"
+    activeArtist ? "artist" : "follower"
   );
-  const [author, setAuthor] = useState(session === "artist" ? ME.name : "");
+  const [author, setAuthor] = useState("");
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    const local = getLocalPosts();
-    const post = [...local, ...mockPosts].find((p) => p.id === postId) ?? null;
-    const comments = post ? [...post.comments, ...getLocalComments(postId)] : [];
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- resolve post + comments (incl. locally-added ones) from storage post-mount
-    setHydrated({ post, comments });
+    getPost(postId).then((post) => {
+      setHydrated({ post, comments: post?.comments ?? [] });
+    });
   }, [postId]);
 
   useEffect(() => {
-    if (session !== "follower") return;
+    if (activeArtist) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- prefill artist nickname once the session loads
+      setAuthor(activeArtist.name);
+      return;
+    }
+    if (!isLoggedIn) return;
+    if (nickname) {
+      setAuthor(nickname);
+      return;
+    }
     try {
       const raw = window.sessionStorage.getItem("muraton-last-order");
       if (raw) {
         const order = JSON.parse(raw);
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- prefill nickname from the follower's last completed order
         if (order?.name) setAuthor(order.name);
       }
     } catch {
       // ignore malformed order snapshot
     }
-  }, [session]);
+  }, [activeArtist, isLoggedIn, nickname]);
 
   if (!hydrated) return null;
 
@@ -79,11 +77,11 @@ export default function CommunityPostDetailPage() {
 
   const { post } = hydrated;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = message.trim();
     if (!trimmed) return;
-    const comment = addLocalComment(postId, { author, authorType, message: trimmed });
+    const comment = await addLocalComment(postId, { author, authorType, message: trimmed });
     setHydrated((prev) => (prev ? { ...prev, comments: [...prev.comments, comment] } : prev));
     setMessage("");
   };
@@ -108,6 +106,21 @@ export default function CommunityPostDetailPage() {
         {post.body}
       </p>
 
+      {post.tags.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {post.tags.map((tag) => (
+            <span
+              key={tag}
+              className="rounded-full bg-accent/10 px-2 py-0.5 text-xs font-semibold text-accent-strong"
+            >
+              #{tag}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {post.attachedProduct && <MiniTrackCard product={post.attachedProduct} />}
+
       <section className="mt-10">
         <h2 className="mb-3 text-lg font-bold text-ink">댓글 {hydrated.comments.length}개</h2>
 
@@ -115,7 +128,7 @@ export default function CommunityPostDetailPage() {
           onSubmit={handleSubmit}
           className="mb-4 flex flex-col gap-2 rounded-xl border border-line bg-surface p-3"
         >
-          {session === null && (
+          {!isLoggedIn && (
             <div className="grid grid-cols-2 gap-2 rounded-full border border-line bg-surface p-1">
               <button
                 type="button"

@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "@/context/auth-context";
 import { useCart } from "@/context/cart-context";
-import { getArtistById, getProductById } from "@/lib/data";
+import { useCatalog } from "@/lib/use-catalog";
 import { formatWon } from "@/lib/format";
-import { addLocalSupporter } from "@/lib/supporters-storage";
-import { addPurchases } from "@/lib/purchase-storage";
+import { createOrder } from "@/lib/orders-client";
 import type { Order } from "@/lib/types";
 
 const QUICK_EMOJIS = ["❤️", "🙏", "🔥", "✨"];
@@ -18,13 +18,22 @@ function generateOrderId() {
 
 export default function CheckoutPage() {
   const { items, totalPrice, clearCart } = useCart();
+  const catalog = useCatalog();
   const router = useRouter();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const { isLoggedIn, loading: authLoading, nickname, email } = useAuth();
   const [cheerMessage, setCheerMessage] = useState("");
   const [promptAnswer, setPromptAnswer] = useState("");
   const [listAsSupporter, setListAsSupporter] = useState(true);
+  const [agreedToCopyright, setAgreedToCopyright] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && !isLoggedIn) {
+      router.replace("/login?message=" + encodeURIComponent("구매하려면 로그인이 필요해요."));
+    }
+  }, [authLoading, isLoggedIn, router]);
+
+  if (authLoading || !isLoggedIn) return null;
 
   if (items.length === 0) {
     return (
@@ -40,38 +49,34 @@ export default function CheckoutPage() {
     );
   }
 
-  const firstProduct = getProductById(items[0].productId);
-  const primaryArtist = firstProduct ? getArtistById(firstProduct.artistId) : undefined;
+  if (!catalog) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const firstProduct = catalog.getProductById(items[0].productId);
+  const primaryArtist = firstProduct ? catalog.getArtistById(firstProduct.artistId) : undefined;
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
 
-    if (listAsSupporter && primaryArtist) {
-      addLocalSupporter(primaryArtist.id, name);
-    }
-
-    addPurchases(
-      items.map((item) => ({
-        productId: item.productId,
-        artistId: getProductById(item.productId)?.artistId ?? "",
-        price: item.price,
-        quantity: item.quantity,
-      }))
-    );
+    const orderItems = items.map((item) => ({
+      productId: item.productId,
+      artistId: catalog.getProductById(item.productId)?.artistId ?? "",
+      price: item.price,
+      quantity: item.quantity,
+    }));
 
     const order: Order = {
       id: generateOrderId(),
-      name,
-      email,
+      name: nickname ?? "",
+      email: email ?? "",
       cheerMessage,
       promptQuestion: primaryArtist?.checkoutQuestion,
       promptAnswer: primaryArtist?.checkoutQuestion ? promptAnswer : undefined,
       listAsSupporter,
       primaryArtistId: primaryArtist?.id,
       items: items.map((item) => {
-        const product = getProductById(item.productId);
-        const artist = product ? getArtistById(product.artistId) : undefined;
+        const product = catalog.getProductById(item.productId);
+        const artist = product ? catalog.getArtistById(product.artistId) : undefined;
         return {
           productId: item.productId,
           title: product?.title ?? "알 수 없는 상품",
@@ -82,6 +87,16 @@ export default function CheckoutPage() {
       }),
       total: totalPrice,
     };
+
+    await createOrder({
+      cheerMessage,
+      promptQuestion: order.promptQuestion,
+      promptAnswer: order.promptAnswer,
+      listAsSupporter,
+      primaryArtistId: primaryArtist?.id,
+      total: totalPrice,
+      items: orderItems,
+    });
 
     window.sessionStorage.setItem("muraton-last-order", JSON.stringify(order));
     clearCart();
@@ -94,26 +109,14 @@ export default function CheckoutPage() {
 
       <div className="grid grid-cols-1 gap-8 sm:grid-cols-[1fr_300px]">
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div>
-            <label className="mb-1 block text-sm text-muted">이름</label>
-            <input
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-ink outline-none focus:border-accent"
-              placeholder="홍길동"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm text-muted">이메일</label>
-            <input
-              required
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-ink outline-none focus:border-accent"
-              placeholder="you@example.com"
-            />
+          <div className="flex items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-black text-white">
+              {(nickname ?? "?").slice(0, 1)}
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-bold text-ink">{nickname}</p>
+              <p className="truncate text-xs text-muted">{email}</p>
+            </div>
           </div>
 
           <div>
@@ -167,13 +170,29 @@ export default function CheckoutPage() {
             </span>
           </label>
 
+          <div className="rounded-lg border border-amber-400/40 bg-amber-400/10 p-3">
+            <p className="text-sm font-bold text-amber-800">
+              ⓒ 음원 재판매 및 무단 활용을 금지합니다. 모든 저작권은 아티스트에게 있습니다.
+            </p>
+            <label className="mt-2 flex items-start gap-2 text-sm text-ink">
+              <input
+                required
+                type="checkbox"
+                checked={agreedToCopyright}
+                onChange={(e) => setAgreedToCopyright(e.target.checked)}
+                className="mt-0.5 h-4 w-4 accent-accent"
+              />
+              <span>위 저작권 안내 내용에 동의합니다. (필수)</span>
+            </label>
+          </div>
+
           <p className="text-xs text-muted">
-            프로토타입이므로 실제 결제는 이루어지지 않습니다. 버튼을 누르면 가상의 주문이 생성돼요.
+            프로토타입이므로 실제 결제는 이루어지지 않습니다. 버튼을 누르면 주문 내역이 저장돼요.
           </p>
 
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || !agreedToCopyright}
             className="mt-2 rounded-full bg-accent px-6 py-3 text-sm font-bold text-white transition hover:bg-accent-strong disabled:opacity-60"
           >
             {formatWon(totalPrice)} 결제 완료하기
@@ -184,7 +203,7 @@ export default function CheckoutPage() {
           <p className="mb-3 text-sm font-bold text-ink">주문 요약</p>
           <div className="flex flex-col gap-2">
             {items.map((item) => {
-              const product = getProductById(item.productId);
+              const product = catalog.getProductById(item.productId);
               return (
                 <div key={item.productId} className="flex justify-between text-sm">
                   <span className="text-ink">

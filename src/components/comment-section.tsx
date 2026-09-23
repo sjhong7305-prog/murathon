@@ -4,11 +4,7 @@ import { useEffect, useState } from "react";
 import { hasPurchased } from "@/lib/purchase-storage";
 import { getLocalComments, addLocalComment, type Comment } from "@/lib/comment-storage";
 import { mockComments } from "@/lib/mock-comments";
-
-function formatDate(iso: string) {
-  const d = new Date(iso);
-  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
-}
+import { formatDate } from "@/lib/format";
 
 export function CommentSection({ productId }: { productId: string }) {
   const [hydrated, setHydrated] = useState<{ isBuyer: boolean; comments: Comment[] } | null>(null);
@@ -16,10 +12,6 @@ export function CommentSection({ productId }: { productId: string }) {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    const isBuyer = hasPurchased(productId);
-    const base = mockComments[productId] ?? [];
-    const local = getLocalComments(productId);
-
     let prefillNickname = "";
     try {
       const raw = window.sessionStorage.getItem("muraton-last-order");
@@ -31,31 +23,25 @@ export function CommentSection({ productId }: { productId: string }) {
       // ignore malformed order snapshot
     }
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate buyer status + comments from browser storage post-mount
-    setHydrated({ isBuyer, comments: [...base, ...local] });
-    if (prefillNickname) {
-      setNickname(prefillNickname);
-    }
+    Promise.all([hasPurchased(productId), getLocalComments(productId)]).then(
+      ([isBuyer, local]) => {
+        const base = mockComments[productId] ?? [];
+        setHydrated({ isBuyer, comments: [...base, ...local] });
+        if (prefillNickname) setNickname(prefillNickname);
+      }
+    );
   }, [productId]);
 
   if (!hydrated) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = message.trim();
     if (!trimmed) return;
-    addLocalComment(productId, nickname, trimmed);
-    setHydrated((prev) =>
-      prev
-        ? {
-            ...prev,
-            comments: [
-              ...prev.comments,
-              { nickname: nickname.trim() || "익명의 팬", message: trimmed, createdAt: new Date().toISOString() },
-            ],
-          }
-        : prev
-    );
+    const comment = await addLocalComment(productId, nickname, trimmed);
+    if (comment) {
+      setHydrated((prev) => (prev ? { ...prev, comments: [...prev.comments, comment] } : prev));
+    }
     setMessage("");
   };
 

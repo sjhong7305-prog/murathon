@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { artists } from "@/lib/data";
+import { getAllArtists } from "@/lib/data";
 import { GENRES } from "@/lib/genres";
 import { CoverArt } from "@/components/cover-art";
 
@@ -11,6 +11,7 @@ export default async function ArtistsPage({
   const { genre } = await searchParams;
   const activeGenre = genre && GENRES.some((g) => g.slug === genre) ? genre : "all";
 
+  const artists = await getAllArtists();
   const filteredArtists =
     activeGenre === "all"
       ? artists

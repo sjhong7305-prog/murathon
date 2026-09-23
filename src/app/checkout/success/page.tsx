@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatWon } from "@/lib/format";
-import { getArtistById, getProductById } from "@/lib/data";
+import { useCatalog } from "@/lib/use-catalog";
 import type { Order } from "@/lib/types";
 
 export default function CheckoutSuccessPage() {
   const [order, setOrder] = useState<Order | null | undefined>(undefined);
+  const catalog = useCatalog();
 
   useEffect(() => {
     const raw = window.sessionStorage.getItem("muraton-last-order");
@@ -15,7 +16,7 @@ export default function CheckoutSuccessPage() {
     setOrder(raw ? JSON.parse(raw) : null);
   }, []);
 
-  if (order === undefined) return null;
+  if (order === undefined || !catalog) return null;
 
   if (order === null) {
     return (
@@ -32,10 +33,12 @@ export default function CheckoutSuccessPage() {
   }
 
   const unlockedSecrets = order.items
-    .map((item) => ({ item, product: getProductById(item.productId) }))
+    .map((item) => ({ item, product: catalog.getProductById(item.productId) }))
     .filter((entry) => entry.product?.secretContent);
 
-  const primaryArtist = order.primaryArtistId ? getArtistById(order.primaryArtistId) : undefined;
+  const primaryArtist = order.primaryArtistId
+    ? catalog.getArtistById(order.primaryArtistId)
+    : undefined;
 
   return (
     <div className="mx-auto max-w-xl px-4 py-16 text-center">

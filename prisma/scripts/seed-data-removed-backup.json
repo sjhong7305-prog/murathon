@@ -1,0 +1,463 @@
+{
+  "orders": [
+    {
+      "id": "cmu2csmtb0002p47ezohazjgs",
+      "buyerUserId": null,
+      "guestId": "6240d66c-b108-494b-a6e1-be12b26e5f0e",
+      "name": "테스트유저",
+      "email": "test@example.com",
+      "cheerMessage": "화이팅",
+      "promptQuestion": null,
+      "promptAnswer": null,
+      "listAsSupporter": true,
+      "primaryArtistId": "a1",
+      "total": 7000,
+      "createdAt": "2026-09-15T07:31:43.871Z",
+      "items": [
+        {
+          "id": "cmu2csmte0003p47eek2q7xrk",
+          "orderId": "cmu2csmtb0002p47ezohazjgs",
+          "productId": "p1",
+          "titleSnapshot": "잔상 (정규 2집)",
+          "artistNameSnapshot": "원더 스태틱",
+          "price": 7000,
+          "quantity": 1,
+          "shippingStatus": "PAID"
+        }
+      ]
+    },
+    {
+      "id": "cmu4t1apj0001ea7e64mrb0jh",
+      "buyerUserId": null,
+      "guestId": "a7ff2b00-f002-42e4-89bf-cda77a19f70d",
+      "name": "테스트유저",
+      "email": "test@example.com",
+      "cheerMessage": null,
+      "promptQuestion": null,
+      "promptAnswer": null,
+      "listAsSupporter": false,
+      "primaryArtistId": null,
+      "total": 5000,
+      "createdAt": "2026-09-17T00:41:54.295Z",
+      "items": [
+        {
+          "id": "cmu4t1apj0002ea7e07hugo8u",
+          "orderId": "cmu4t1apj0001ea7e64mrb0jh",
+          "productId": "p1",
+          "titleSnapshot": "잔상 (정규 2집)",
+          "artistNameSnapshot": "원더 스태틱",
+          "price": 5000,
+          "quantity": 1,
+          "shippingStatus": "PAID"
+        }
+      ]
+    },
+    {
+      "id": "cmu50ex5j00015d7ec0vzt5qg",
+      "buyerUserId": null,
+      "guestId": "d6e09ce0-f859-41e4-b7f3-4b1661a3a67a",
+      "name": "aappa",
+      "email": "sjhong7305@gmail.com",
+      "cheerMessage": null,
+      "promptQuestion": "가장 좋아하는 곡은 무엇인가요?",
+      "promptAnswer": null,
+      "listAsSupporter": true,
+      "primaryArtistId": "a1",
+      "total": 0,
+      "createdAt": "2026-09-17T04:08:27.223Z",
+      "items": [
+        {
+          "id": "cmu50ex5k00025d7ei10a6rmd",
+          "orderId": "cmu50ex5j00015d7ec0vzt5qg",
+          "productId": "p1",
+          "titleSnapshot": "잔상 (정규 2집)",
+          "artistNameSnapshot": "원더 스태틱",
+          "price": 0,
+          "quantity": 1,
+          "shippingStatus": "PAID"
+        }
+      ]
+    },
+    {
+      "id": "cmu5k2ooi00038n7ecrx5rhij",
+      "buyerUserId": "cmu5k24b200008n7ec8brzbc0",
+      "guestId": "b73565cc-1231-4e9a-a82a-8fa2c659c4d4",
+      "name": "챙이",
+      "email": "lcw8214@hanyang.ac.kr",
+      "cheerMessage": "콩성준 바보",
+      "promptQuestion": "요즘 어떤 계절 감정을 느끼고 있나요?",
+      "promptAnswer": null,
+      "listAsSupporter": true,
+      "primaryArtistId": "a3",
+      "total": 5000,
+      "createdAt": "2026-09-17T13:18:48.690Z",
+      "items": [
+        {
+          "id": "cmu5k2ooj00048n7e2e6z7u03",
+          "orderId": "cmu5k2ooi00038n7ecrx5rhij",
+          "productId": "p5",
+          "titleSnapshot": "파도의 계절",
+          "artistNameSnapshot": "해파리",
+          "price": 5000,
+          "quantity": 1,
+          "shippingStatus": "PAID"
+        }
+      ]
+    },
+    {
+      "id": "cmu5k41ky00088n7eyzbtyxx2",
+      "buyerUserId": "cmu5k24b200008n7ec8brzbc0",
+      "guestId": "b73565cc-1231-4e9a-a82a-8fa2c659c4d4",
+      "name": "챙이",
+      "email": "lcw8214@hanyang.ac.kr",
+      "cheerMessage": "해파리?는좀 아쉽긴한데 다음엔 토끼로 해주세요",
+      "promptQuestion": "요즘 어떤 계절 감정을 느끼고 있나요?",
+      "promptAnswer": "가을",
+      "listAsSupporter": true,
+      "primaryArtistId": "a3",
+      "total": 15000,
+      "createdAt": "2026-09-17T13:19:52.066Z",
+      "items": [
+        {
+          "id": "cmu5k41l000098n7e1cwhru90",
+          "orderId": "cmu5k41ky00088n7eyzbtyxx2",
+          "productId": "p6",
+          "titleSnapshot": "해파리 에코백",
+          "artistNameSnapshot": "해파리",
+          "price": 15000,
+          "quantity": 1,
+          "shippingStatus": "PAID"
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "id": "user-a1",
+      "email": "wonder-static@murathon.demo",
+      "passwordHash": "$2b$10$aYMIgWSbDPIr2LtJyAs3ReqWE7X/naSsvFMYQnYMLMVLDxzl9xnhq",
+      "nickname": "원더 스태틱",
+      "isAdmin": false,
+      "collectionPrivacy": "PUBLIC",
+      "failedLoginCount": 0,
+      "lockedUntil": null,
+      "createdAt": "2026-09-15T07:24:05.555Z"
+    },
+    {
+      "id": "user-a2",
+      "email": "gasan-youth@murathon.demo",
+      "passwordHash": "$2b$10$aYMIgWSbDPIr2LtJyAs3ReqWE7X/naSsvFMYQnYMLMVLDxzl9xnhq",
+      "nickname": "가산유스",
+      "isAdmin": false,
+      "collectionPrivacy": "PUBLIC",
+      "failedLoginCount": 0,
+      "lockedUntil": null,
+      "createdAt": "2026-09-15T07:24:05.579Z"
+    },
+    {
+      "id": "user-a3",
+      "email": "haepari@murathon.demo",
+      "passwordHash": "$2b$10$aYMIgWSbDPIr2LtJyAs3ReqWE7X/naSsvFMYQnYMLMVLDxzl9xnhq",
+      "nickname": "해파리",
+      "isAdmin": false,
+      "collectionPrivacy": "PUBLIC",
+      "failedLoginCount": 0,
+      "lockedUntil": null,
+      "createdAt": "2026-09-15T07:24:05.591Z"
+    },
+    {
+      "id": "user-a4",
+      "email": "yeoldae@murathon.demo",
+      "passwordHash": "$2b$10$aYMIgWSbDPIr2LtJyAs3ReqWE7X/naSsvFMYQnYMLMVLDxzl9xnhq",
+      "nickname": "열대야",
+      "isAdmin": false,
+      "collectionPrivacy": "PUBLIC",
+      "failedLoginCount": 0,
+      "lockedUntil": null,
+      "createdAt": "2026-09-15T07:24:05.605Z"
+    },
+    {
+      "id": "user-a5",
+      "email": "j-flow@murathon.demo",
+      "passwordHash": "$2b$10$aYMIgWSbDPIr2LtJyAs3ReqWE7X/naSsvFMYQnYMLMVLDxzl9xnhq",
+      "nickname": "제이플로우",
+      "isAdmin": false,
+      "collectionPrivacy": "PUBLIC",
+      "failedLoginCount": 0,
+      "lockedUntil": null,
+      "createdAt": "2026-09-15T07:24:05.621Z"
+    }
+  ],
+  "artists": [
+    {
+      "id": "a1",
+      "userId": "user-a1",
+      "slug": "wonder-static",
+      "name": "원더 스태틱",
+      "genre": "드림팝 / 슈게이징",
+      "genreTags": [
+        "alternative",
+        "rock"
+      ],
+      "location": "서울",
+      "tagline": "잔상처럼 남는 기타 노이즈",
+      "introduction": "2019년 홍대에서 결성된 3인조 드림팝 밴드. 몽환적인 기타 톤과 나른한 보컬로 소규모 라이브 씬에서 꾸준히 팬을 늘려왔다. 두 번째 정규 앨범 《잔상》을 자체 레이블로 발매했다.",
+      "coverColor": "from-violet-500 to-fuchsia-500",
+      "imageUrl": "https://mzc-sjhong-1368713084.cos.ap-seoul.myqcloud.com/artists/wonder-static-profile.jpg",
+      "bannerImage": "https://mzc-sjhong-1368713084.cos.ap-seoul.myqcloud.com/artists/wonder-static-banner.jpg",
+      "snsLink": "https://instagram.com/wonderstatic",
+      "youtubeLink": "https://youtube.com/@wonderstatic",
+      "websiteLink": "https://wonderstatic.example.com",
+      "checkoutQuestion": "가장 좋아하는 곡은 무엇인가요?",
+      "payoutStatus": "NONE",
+      "subscriptionPriceMonthly": 4900,
+      "subscriptionPriceYearly": 49000,
+      "subscriptionBenefits": [
+        "신곡 자동 발매 알림",
+        "백카탈로그 무제한 감상",
+        "데모·리믹스 등 구독자 전용 트랙",
+        "얼리 액세스",
+        "굿즈 할인",
+        "비하인드 콘텐츠"
+      ],
+      "createdAt": "2026-09-15T07:24:05.573Z",
+      "updatedAt": "2026-09-17T14:16:42.698Z"
+    },
+    {
+      "id": "a4",
+      "userId": "user-a4",
+      "slug": "yeoldae",
+      "name": "열대야",
+      "genre": "신스팝 / 일렉트로닉",
+      "genreTags": [
+        "electronic"
+      ],
+      "location": "부산",
+      "tagline": "한여름 밤의 신스",
+      "introduction": "부산 출신 신스팝 프로젝트. 80년대 신스 사운드와 현대적인 프로덕션을 결합해 여름밤의 정서를 그린다.",
+      "coverColor": "from-amber-400 to-pink-500",
+      "imageUrl": "https://mzc-sjhong-1368713084.cos.ap-seoul.myqcloud.com/artists/yeoldae-profile.jpg",
+      "bannerImage": "https://mzc-sjhong-1368713084.cos.ap-seoul.myqcloud.com/artists/yeoldae-banner.jpg",
+      "snsLink": "https://instagram.com/yeoldae",
+      "youtubeLink": "https://youtube.com/@yeoldae",
+      "websiteLink": "https://yeoldae.example.com",
+      "checkoutQuestion": "이 곡과 함께 떠오르는 여름 기억이 있다면?",
+      "payoutStatus": "NONE",
+      "subscriptionPriceMonthly": 4900,
+      "subscriptionPriceYearly": 49000,
+      "subscriptionBenefits": [
+        "신곡 자동 발매 알림",
+        "백카탈로그 무제한 감상",
+        "데모·리믹스 등 구독자 전용 트랙",
+        "얼리 액세스",
+        "굿즈 할인",
+        "비하인드 콘텐츠"
+      ],
+      "createdAt": "2026-09-15T07:24:05.615Z",
+      "updatedAt": "2026-09-17T14:16:42.742Z"
+    },
+    {
+      "id": "a5",
+      "userId": "user-a5",
+      "slug": "j-flow",
+      "name": "제이플로우",
+      "genre": "힙합 / 솔로",
+      "genreTags": [
+        "hip-hop-rap"
+      ],
+      "location": "서울",
+      "tagline": "혼자 쓰고, 혼자 부르고, 혼자 완성한다",
+      "introduction": "비트 프로듀싱부터 랩까지 전부 혼자 만드는 솔로 힙합 아티스트. 자취방 작업실에서 녹음한 로파이 힙합으로 입소문을 타기 시작했다.",
+      "coverColor": "from-lime-500 to-emerald-600",
+      "imageUrl": "https://mzc-sjhong-1368713084.cos.ap-seoul.myqcloud.com/artists/j-flow-profile.jpg",
+      "bannerImage": "https://mzc-sjhong-1368713084.cos.ap-seoul.myqcloud.com/artists/j-flow-banner.jpg",
+      "snsLink": "https://instagram.com/jflow",
+      "youtubeLink": null,
+      "websiteLink": null,
+      "checkoutQuestion": "제이플로우 가사 중 가장 와닿았던 한 줄은?",
+      "payoutStatus": "NONE",
+      "subscriptionPriceMonthly": 4900,
+      "subscriptionPriceYearly": 49000,
+      "subscriptionBenefits": [
+        "신곡 자동 발매 알림",
+        "백카탈로그 무제한 감상",
+        "데모·리믹스 등 구독자 전용 트랙",
+        "얼리 액세스",
+        "굿즈 할인",
+        "비하인드 콘텐츠"
+      ],
+      "createdAt": "2026-09-15T07:24:05.633Z",
+      "updatedAt": "2026-09-17T14:16:42.764Z"
+    },
+    {
+      "id": "a2",
+      "userId": "user-a2",
+      "slug": "gasan-youth",
+      "name": "가산유스",
+      "genre": "펑크 / 개러지 록",
+      "genreTags": [
+        "punk",
+        "rock"
+      ],
+      "location": "인천",
+      "tagline": "3분 안에 끝내는 분노",
+      "introduction": "공단 지역을 오가며 자란 멤버들이 만든 로파이 펑크 밴드. 직설적인 가사와 거친 사운드가 특징이며, 라이브 클럽을 중심으로 활동한다.",
+      "coverColor": "from-orange-500 to-rose-500",
+      "imageUrl": "https://mzc-sjhong-1368713084.cos.ap-seoul.myqcloud.com/artists/gasan-youth-profile.jpg",
+      "bannerImage": "https://mzc-sjhong-1368713084.cos.ap-seoul.myqcloud.com/artists/gasan-youth-banner.jpg",
+      "snsLink": "https://instagram.com/gasanyouth",
+      "youtubeLink": "https://youtube.com/@gasanyouth",
+      "websiteLink": null,
+      "checkoutQuestion": "가산유스에게 하고 싶은 한마디는?",
+      "payoutStatus": "NONE",
+      "subscriptionPriceMonthly": 4900,
+      "subscriptionPriceYearly": 49000,
+      "subscriptionBenefits": [
+        "신곡 자동 발매 알림",
+        "백카탈로그 무제한 감상",
+        "데모·리믹스 등 구독자 전용 트랙",
+        "얼리 액세스",
+        "굿즈 할인",
+        "비하인드 콘텐츠"
+      ],
+      "createdAt": "2026-09-15T07:24:05.587Z",
+      "updatedAt": "2026-09-17T14:16:42.712Z"
+    },
+    {
+      "id": "a3",
+      "userId": "user-a3",
+      "slug": "haepari",
+      "name": "해파리",
+      "genre": "포크 / 어쿠스틱",
+      "genreTags": [
+        "folk",
+        "acoustic"
+      ],
+      "location": "제주",
+      "tagline": "파도 소리를 닮은 노래",
+      "introduction": "제주 바닷가 마을에서 활동하는 싱어송라이터 듀오. 어쿠스틱 기타와 첼로로 계절의 감정을 담은 곡을 쓴다.",
+      "coverColor": "from-teal-400 to-cyan-600",
+      "imageUrl": "https://mzc-sjhong-1368713084.cos.ap-seoul.myqcloud.com/artists/haepari-profile.jpg",
+      "bannerImage": "https://mzc-sjhong-1368713084.cos.ap-seoul.myqcloud.com/artists/haepari-banner.jpg",
+      "snsLink": null,
+      "youtubeLink": null,
+      "websiteLink": "https://haepari.example.com",
+      "checkoutQuestion": "요즘 어떤 계절 감정을 느끼고 있나요?",
+      "payoutStatus": "NONE",
+      "subscriptionPriceMonthly": 4900,
+      "subscriptionPriceYearly": 49000,
+      "subscriptionBenefits": [
+        "신곡 자동 발매 알림",
+        "백카탈로그 무제한 감상",
+        "데모·리믹스 등 구독자 전용 트랙",
+        "얼리 액세스",
+        "굿즈 할인",
+        "비하인드 콘텐츠"
+      ],
+      "createdAt": "2026-09-15T07:24:05.598Z",
+      "updatedAt": "2026-09-17T14:16:42.729Z"
+    }
+  ],
+  "communityPosts": [
+    {
+      "id": "c1",
+      "authorUserId": null,
+      "authorType": "ARTIST",
+      "authorNickname": "원더 스태틱",
+      "title": "다음 앨범 작업 근황 공유해요",
+      "body": "요즘 새 앨범 데모를 만들고 있어요. 어쿠스틱 버전이랑 풀밴드 버전 둘 다 시도해보는 중인데, 여러분은 어떤 편곡이 더 궁금하세요?",
+      "tags": [
+        "신보",
+        "라이브"
+      ],
+      "attachedProductId": "p1",
+      "createdAt": "2026-09-01T09:00:00.000Z",
+      "comments": [
+        {
+          "id": "c1-cm1",
+          "postId": "c1",
+          "authorUserId": null,
+          "authorType": "FOLLOWER",
+          "authorNickname": "민지",
+          "message": "풀밴드 버전 완전 궁금해요! 라이브에서도 듣고 싶어요.",
+          "createdAt": "2026-09-01T10:00:00.000Z"
+        },
+        {
+          "id": "c1-cm2",
+          "postId": "c1",
+          "authorUserId": null,
+          "authorType": "FOLLOWER",
+          "authorNickname": "소리",
+          "message": "어쿠스틱도 좋을 것 같아요 두 버전 다 내주시면 안 될까요 ㅎㅎ",
+          "createdAt": "2026-09-01T11:20:00.000Z"
+        }
+      ]
+    },
+    {
+      "id": "c2",
+      "authorUserId": null,
+      "authorType": "FOLLOWER",
+      "authorNickname": "바다",
+      "title": "인디 공연 다니시는 분들 팁 좀 주세요",
+      "body": "이번 달에 홍대/인천 쪽 공연 많이 보러 다니는데, 좋았던 공연장이나 팁 있으면 공유해주세요!",
+      "tags": [
+        "홍대",
+        "라이브공연"
+      ],
+      "attachedProductId": "p3",
+      "createdAt": "2026-09-03T14:00:00.000Z",
+      "comments": [
+        {
+          "id": "c2-cm1",
+          "postId": "c2",
+          "authorUserId": null,
+          "authorType": "ARTIST",
+          "authorNickname": "가산유스",
+          "message": "저희 다음 공연도 놀러오세요! 홍대 라이브클럽 라인업 좋아요.",
+          "createdAt": "2026-09-03T15:30:00.000Z"
+        }
+      ]
+    },
+    {
+      "id": "c3",
+      "authorUserId": null,
+      "authorType": "ARTIST",
+      "authorNickname": "제이플로우",
+      "title": "이번 주말 공연 있어요 (제이플로우)",
+      "body": "이번 주 토요일 저녁 공덕에서 작은 쇼케이스 해요. 신곡도 처음 공개할 예정입니다.",
+      "tags": [
+        "쇼케이스",
+        "신곡"
+      ],
+      "attachedProductId": null,
+      "createdAt": "2026-09-05T08:00:00.000Z",
+      "comments": []
+    },
+    {
+      "id": "c4",
+      "authorUserId": null,
+      "authorType": "FOLLOWER",
+      "authorNickname": "여름밤",
+      "title": "PWYW로 후원하는 거 처음 해봤는데 신기하네요",
+      "body": "가격을 직접 정해서 후원하는 방식 처음 써봤는데 아티스트한테 바로 전달된다는 게 좋았어요. 다들 어떤 아티스트 후원하셨나요?",
+      "tags": [
+        "PWYW",
+        "후원"
+      ],
+      "attachedProductId": null,
+      "createdAt": "2026-09-07T18:00:00.000Z",
+      "comments": [
+        {
+          "id": "c4-cm1",
+          "postId": "c4",
+          "authorUserId": null,
+          "authorType": "FOLLOWER",
+          "authorNickname": "재현",
+          "message": "저는 가산유스 EP 후원했어요! 0원부터 시작할 수 있어서 부담 없더라고요.",
+          "createdAt": "2026-09-07T19:10:00.000Z"
+        }
+      ]
+    }
+  ],
+  "dumpedAt": "2026-09-17T14:38:02.182Z"
+}

@@ -1,10 +1,6 @@
 import { notFound } from "next/navigation";
-import { getArtistById, getProductById, products } from "@/lib/data";
+import { getArtistById, getProductById } from "@/lib/data";
 import { ProductDetail } from "@/components/product-detail";
-
-export function generateStaticParams() {
-  return products.map((product) => ({ id: product.id }));
-}
 
 export default async function ProductPage({
   params,
@@ -12,10 +8,10 @@ export default async function ProductPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const product = getProductById(id);
+  const product = await getProductById(id);
   if (!product) notFound();
 
-  const artist = getArtistById(product.artistId);
+  const artist = await getArtistById(product.artistId);
   if (!artist) notFound();
 
   return <ProductDetail product={product} artist={artist} />;

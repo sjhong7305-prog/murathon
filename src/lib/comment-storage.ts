@@ -4,35 +4,32 @@ export interface Comment {
   createdAt: string;
 }
 
-const STORAGE_KEY = "muraton-local-comments";
-
-type CommentsMap = Record<string, Comment[]>;
-
-function readMap(): CommentsMap {
+export async function getLocalComments(productId: string): Promise<Comment[]> {
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : {};
+    const res = await fetch(`/api/products/${productId}/comments`);
+    if (!res.ok) return [];
+    return await res.json();
   } catch {
-    return {};
+    return [];
   }
 }
 
-export function getLocalComments(productId: string): Comment[] {
-  return readMap()[productId] ?? [];
-}
-
-export function addLocalComment(productId: string, nickname: string, message: string) {
+export async function addLocalComment(
+  productId: string,
+  nickname: string,
+  message: string
+): Promise<Comment | null> {
   const trimmedMessage = message.trim();
-  if (!trimmedMessage) return;
-  const map = readMap();
-  const existing = map[productId] ?? [];
-  map[productId] = [
-    ...existing,
-    {
-      nickname: nickname.trim() || "익명의 팬",
-      message: trimmedMessage,
-      createdAt: new Date().toISOString(),
-    },
-  ];
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
+  if (!trimmedMessage) return null;
+  try {
+    const res = await fetch(`/api/products/${productId}/comments`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nickname, message: trimmedMessage }),
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
 }

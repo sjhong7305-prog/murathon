@@ -1,12 +1,34 @@
-import type { CommunityPost } from "./community-storage";
+import type { AuthorType } from "./community-storage";
 
-export const mockPosts: CommunityPost[] = [
+interface MockComment {
+  id: string;
+  author: string;
+  authorType: AuthorType;
+  message: string;
+  createdAt: string;
+}
+
+export interface MockCommunityPost {
+  id: string;
+  title: string;
+  body: string;
+  author: string;
+  authorType: AuthorType;
+  tags: string[];
+  attachedProductId?: string;
+  createdAt: string;
+  comments: MockComment[];
+}
+
+export const mockPosts: MockCommunityPost[] = [
   {
     id: "c1",
     title: "다음 앨범 작업 근황 공유해요",
     body: "요즘 새 앨범 데모를 만들고 있어요. 어쿠스틱 버전이랑 풀밴드 버전 둘 다 시도해보는 중인데, 여러분은 어떤 편곡이 더 궁금하세요?",
     author: "원더 스태틱",
     authorType: "artist",
+    tags: ["신보", "라이브"],
+    attachedProductId: "p1",
     createdAt: "2026-09-01T09:00:00.000Z",
     comments: [
       {
@@ -31,6 +53,8 @@ export const mockPosts: CommunityPost[] = [
     body: "이번 달에 홍대/인천 쪽 공연 많이 보러 다니는데, 좋았던 공연장이나 팁 있으면 공유해주세요!",
     author: "바다",
     authorType: "follower",
+    tags: ["홍대", "라이브공연"],
+    attachedProductId: "p3",
     createdAt: "2026-09-03T14:00:00.000Z",
     comments: [
       {
@@ -48,6 +72,7 @@ export const mockPosts: CommunityPost[] = [
     body: "이번 주 토요일 저녁 공덕에서 작은 쇼케이스 해요. 신곡도 처음 공개할 예정입니다.",
     author: "제이플로우",
     authorType: "artist",
+    tags: ["쇼케이스", "신곡"],
     createdAt: "2026-09-05T08:00:00.000Z",
     comments: [],
   },
@@ -57,6 +82,7 @@ export const mockPosts: CommunityPost[] = [
     body: "가격을 직접 정해서 후원하는 방식 처음 써봤는데 아티스트한테 바로 전달된다는 게 좋았어요. 다들 어떤 아티스트 후원하셨나요?",
     author: "여름밤",
     authorType: "follower",
+    tags: ["PWYW", "후원"],
     createdAt: "2026-09-07T18:00:00.000Z",
     comments: [
       {
