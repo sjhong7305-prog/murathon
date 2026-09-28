@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getProductsByArtist } from "@/lib/data";
 import { formatWon } from "@/lib/format";
+import { formatReleaseLabel } from "@/lib/release-label";
 import { CoverArt } from "@/components/cover-art";
 import { requireArtistMember } from "@/lib/auth";
 import { DeleteReleaseButton } from "@/components/delete-release-button";
@@ -17,15 +18,9 @@ export default async function ReleasesPage({ params }: { params: Promise<{ slug:
         <div className="flex shrink-0 gap-2">
           <Link
             href={`/artist/${artist.slug}/dashboard/upload/track`}
-            className="rounded-full border border-accent/40 px-5 py-2.5 text-sm font-bold text-accent-strong transition hover:bg-accent/10"
-          >
-            🎵 음원 업로드
-          </Link>
-          <Link
-            href={`/artist/${artist.slug}/dashboard/upload`}
             className="rounded-full bg-accent px-5 py-2.5 text-sm font-bold text-white transition hover:bg-accent-strong"
           >
-            + 새 릴리즈 업로드
+            🎵 음원 업로드
           </Link>
         </div>
       </div>
@@ -50,17 +45,19 @@ export default async function ReleasesPage({ params }: { params: Promise<{ slug:
                   </span>
                 )}
               </p>
-              <p className="text-xs text-muted">{product.format}</p>
+              <p className="text-xs text-muted">{formatReleaseLabel(product)}</p>
             </div>
             <span className="shrink-0 text-sm font-semibold text-ink">
               {formatWon(product.suggestedPrice)}
             </span>
-            <Link
-              href={`/artist/${artist.slug}/dashboard/upload`}
-              className="shrink-0 rounded-lg border border-line px-3 py-1.5 text-xs font-bold text-ink transition hover:border-black/20 hover:text-ink"
-            >
-              수정
-            </Link>
+            {product.type === "track" && (
+              <Link
+                href={`/artist/${artist.slug}/dashboard/releases/${product.id}/edit`}
+                className="shrink-0 rounded-lg border border-line px-3 py-1.5 text-xs font-bold text-ink transition hover:border-black/20 hover:text-ink"
+              >
+                수정
+              </Link>
+            )}
             {(product.type === "album" || product.type === "track") &&
               product.status === "published" && (
                 <DeleteReleaseButton

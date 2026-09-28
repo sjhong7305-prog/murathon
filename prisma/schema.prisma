@@ -34,6 +34,24 @@ enum ProductStatus {
   UNPUBLISHED
 }
 
+/// A release's musical shape — independent of what physical/digital formats it's sold in
+/// (see ReleaseFormat). Only meaningful for ALBUM/TRACK products; null on MERCH/TICKET.
+enum ReleaseType {
+  SINGLE
+  EP
+  ALBUM
+}
+
+/// One sellable format of a release. Today every release gets exactly one DIGITAL row created
+/// alongside it — CD/VINYL/CASSETTE exist in the schema so physical formats are additive later,
+/// but no UI creates them yet.
+enum ReleaseFormatType {
+  DIGITAL
+  CD
+  VINYL
+  CASSETTE
+}
+
 enum PricingType {
   PWYW
   FIXED
@@ -87,8 +105,7 @@ enum HeroTextPosition {
 
 enum BroadcastTarget {
   ALL
-  AMOUNT
-  REGION
+  PURCHASED
 }
 
 enum ShippingStatus {
@@ -403,7 +420,11 @@ model Product {
   status          ProductStatus @default(PUBLISHED)
   title           String
   description     String
+  /// Legacy free-text label — still used for MERCH/TICKET ("의류 / M~XL", "공연 티켓"). For
+  /// ALBUM/TRACK, display now comes from releaseType + releaseFormats via formatReleaseLabel().
   format          String?
+  /// ALBUM/TRACK only — see ReleaseType. Null on MERCH/TICKET.
+  releaseType     ReleaseType?
   /// ALBUM/TRACK only: e.g. "hiphop"/"indie" (Artist.genre is the artist's overall genre; this is per-release).
   genre           String?
   minPrice        Int
@@ -437,8 +458,30 @@ model Product {
   supporterNotes SupporterNote[]
   playlistTracks PlaylistTrack[]
   albumTracks    AlbumTrack[]
+  releaseFormats ReleaseFormat[]
 
   @@map("products")
+}
+
+/**
+ * One sellable format of an ALBUM/TRACK release (digital today; CD/VINYL/CASSETTE additive
+ * later — see ReleaseFormatType). `price` is that format's own price, independent of the
+ * release's PWYW minPrice/suggestedPrice. `stock` null means unlimited (always true for DIGITAL).
+ */
+model ReleaseFormat {
+  id               String            @id @default(cuid())
+  releaseId        String
+  release          Product           @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  format           ReleaseFormatType
+  price            Int
+  stock            Int?
+  includesDigital  Boolean           @default(false)
+  shippingRequired Boolean           @default(false)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  @@unique([releaseId, format])
+  @@map("release_formats")
 }
 
 /**
@@ -600,7 +643,6 @@ model Broadcast {
   title        String?
   message      String
   target       BroadcastTarget
-  targetDetail String?
   /// Who beyond "everyone" can see this on the public notice board (/artists/[slug] home tab,
   /// /artists/[slug]/notices). Unrelated to `target`, which is about push-style reach at send
   /// time — a notice can be pushed to "전체 팔로워" and still be SUPPORTER-only to actually view.
@@ -617,7 +659,7 @@ model Broadcast {
   @@map("broadcasts")
 }
 
-/// One image attached to a broadcast, in display order. Max 3 enforced at the API layer.
+/// One image attached to a broadcast, in display order. Max 5 enforced at the API layer.
 model BroadcastMedia {
   id          String    @id @default(cuid())
   broadcastId String

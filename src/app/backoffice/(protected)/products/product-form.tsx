@@ -1,3 +1,5 @@
+import { RELEASE_TYPE_OPTIONS } from "@/lib/release-label";
+
 interface Artist {
   id: string;
   name: string;
@@ -15,6 +17,7 @@ interface ProductFormValues {
   title?: string;
   description?: string;
   format?: string | null;
+  releaseType?: string | null;
   minPrice?: number;
   suggestedPrice?: number;
   coverColor?: string;
@@ -97,8 +100,8 @@ export function ProductForm({
 
       <div className="grid grid-cols-3 gap-4">
         <div>
-          <label className="mb-1 block text-sm text-muted">형식</label>
-          <input name="format" defaultValue={v.format ?? ""} className={FIELD_CLASS} placeholder="디지털 앨범" />
+          <label className="mb-1 block text-sm text-muted">형식 (굿즈/티켓 전용)</label>
+          <input name="format" defaultValue={v.format ?? ""} className={FIELD_CLASS} placeholder="의류 / M~XL" />
         </div>
         <div>
           <label className="mb-1 block text-sm text-muted">최소 가격</label>
@@ -179,6 +182,16 @@ export function ProductForm({
       <div className="rounded-lg border border-line bg-surface p-3">
         <p className="mb-2 text-sm font-bold text-ink">🎵 음원 전용 (종류가 앨범/트랙일 때만 사용)</p>
         <div className="flex flex-col gap-2">
+          <div>
+            <label className="mb-1 block text-sm text-muted">릴리즈 유형</label>
+            <select name="releaseType" defaultValue={v.releaseType ?? "single"} className={FIELD_CLASS}>
+              {RELEASE_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
           <textarea
             name="longDescription"
             defaultValue={v.longDescription ?? ""}

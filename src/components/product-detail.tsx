@@ -12,6 +12,7 @@ import { AlbumIntro } from "./album-intro";
 import { useAuth } from "@/context/auth-context";
 import { useCart } from "@/context/cart-context";
 import { formatWon } from "@/lib/format";
+import { formatReleaseLabel } from "@/lib/release-label";
 import { CommentSection } from "./comment-section";
 
 export function ProductDetail({ product, artist }: { product: Product; artist: Artist }) {
@@ -67,7 +68,7 @@ export function ProductDetail({ product, artist }: { product: Product; artist: A
             {artist.name}
           </Link>
           <h1 className="mt-1 text-2xl font-black text-ink sm:text-3xl">{product.title}</h1>
-          <p className="mt-1 text-sm text-muted">{product.format}</p>
+          <p className="mt-1 text-sm text-muted">{formatReleaseLabel(product)}</p>
           <p className="mt-4 max-w-lg text-sm leading-relaxed text-ink">
             {product.description}
           </p>

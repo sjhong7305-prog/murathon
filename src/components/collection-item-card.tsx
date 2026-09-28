@@ -11,6 +11,7 @@ export interface CollectionItem {
   productId: string;
   title: string;
   type: "ALBUM" | "TRACK" | "MERCH" | "TICKET";
+  releaseLabel?: string;
   status?: "PUBLISHED" | "UNPUBLISHED";
   coverColor: string;
   imageUrl?: string | null;
@@ -103,6 +104,7 @@ export function CollectionItemCard({
             판매 종료
           </span>
         )}
+        {isMusic && item.releaseLabel && <p className="text-xs text-muted">{item.releaseLabel}</p>}
         <p className="text-xs text-muted">
           <Link href={`/artists/${item.artistSlug}`} className="hover:text-accent-strong">
             {item.artistName}

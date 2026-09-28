@@ -1,6 +1,7 @@
 import { getAllArtists, getAllProducts } from "@/lib/data";
 import { ProductCard } from "@/components/product-card";
 import { ArtistCard } from "@/components/artist-card";
+import { formatReleaseLabel } from "@/lib/release-label";
 import type { ProductType } from "@/lib/types";
 
 const TYPE_GROUPS: Record<string, ProductType[]> = {
@@ -41,7 +42,7 @@ export default async function SearchPage({
     return (
       p.title.toLowerCase().includes(query) ||
       p.description.toLowerCase().includes(query) ||
-      (p.format ?? "").toLowerCase().includes(query) ||
+      formatReleaseLabel(p).toLowerCase().includes(query) ||
       Boolean(artist?.name.toLowerCase().includes(query))
     );
   });

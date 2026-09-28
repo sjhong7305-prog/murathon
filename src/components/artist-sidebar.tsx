@@ -4,6 +4,7 @@ import Link from "next/link";
 import { AtSign, Globe, PlayCircle } from "lucide-react";
 import type { Artist, ArtistMemberSummary, Product } from "@/lib/types";
 import { formatDate, formatWon } from "@/lib/format";
+import { formatReleaseLabel } from "@/lib/release-label";
 import { ArtistBio } from "./artist-bio";
 import { FollowArtistButton } from "./follow-artist-button";
 import { CoverArt } from "./cover-art";
@@ -142,9 +143,9 @@ function LatestReleasesCard({ artistSlug, releases }: { artistSlug: string; rele
               <p className="truncate text-sm font-bold" style={{ color: "var(--artist-card-text)" }}>
                 {r.title}
               </p>
-              {r.format && (
+              {formatReleaseLabel(r) && (
                 <p className="text-xs opacity-70" style={{ color: "var(--artist-card-text)" }}>
-                  {r.format}
+                  {formatReleaseLabel(r)}
                 </p>
               )}
               <p className="mt-0.5 text-xs font-semibold" style={{ color: "var(--artist-accent)" }}>

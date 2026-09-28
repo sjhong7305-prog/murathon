@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { formatReleaseLabel } from "@/lib/release-label";
 
 export type CollectionItemType = "ALBUM" | "TRACK" | "MERCH" | "TICKET";
 
@@ -6,6 +7,8 @@ export interface FanCollectionItem {
   productId: string;
   title: string;
   type: CollectionItemType;
+  /** album/track only — "디지털 싱글" etc, via formatReleaseLabel(). */
+  releaseLabel?: string;
   /** UNPUBLISHED = artist soft-deleted this release after purchase; the fan keeps legacy access. */
   status: "PUBLISHED" | "UNPUBLISHED";
   coverColor: string;
@@ -61,6 +64,29 @@ function admissionCodeFor(orderItemId: string) {
   return `TICKET-${orderItemId.slice(0, 8).toUpperCase()}`;
 }
 
+type ReleaseLabelRow = {
+  type: CollectionItemType;
+  format: string | null;
+  releaseType: string | null;
+  releaseFormats: { format: string; price: number; stock: number | null; includesDigital: boolean; shippingRequired: boolean }[];
+};
+
+function releaseLabelFromRow(row: ReleaseLabelRow): string {
+  return formatReleaseLabel({
+    type: row.type.toLowerCase() as "album" | "track" | "merch" | "ticket",
+    format: row.format ?? undefined,
+    releaseType: row.releaseType?.toLowerCase() as "single" | "ep" | "album" | undefined,
+    formats: row.releaseFormats.map((f) => ({
+      id: "",
+      format: f.format.toLowerCase() as "digital" | "cd" | "vinyl" | "cassette",
+      price: f.price,
+      stock: f.stock ?? undefined,
+      includesDigital: f.includesDigital,
+      shippingRequired: f.shippingRequired,
+    })),
+  });
+}
+
 export async function getFanCollectionProfile(
   userId: string,
   viewerUserId?: string | null
@@ -97,7 +123,16 @@ export async function getFanCollectionProfile(
   const [orderItems, notes, follows] = await Promise.all([
     prisma.orderItem.findMany({
       where: { order: { buyerUserId: userId } },
-      include: { product: { include: { artist: true, includedAlbum: { include: { artist: true } } } }, order: true },
+      include: {
+        product: {
+          include: {
+            artist: true,
+            releaseFormats: true,
+            includedAlbum: { include: { artist: true, releaseFormats: true } },
+          },
+        },
+        order: true,
+      },
       orderBy: { order: { createdAt: "desc" } },
     }),
     prisma.supporterNote.findMany({ where: { userId } }),
@@ -118,6 +153,7 @@ export async function getFanCollectionProfile(
         productId: item.productId,
         title: item.product.title,
         type: item.product.type,
+        releaseLabel: releaseLabelFromRow(item.product),
         status: item.product.status,
         coverColor: item.product.coverColor,
         imageUrl: item.product.imageUrl,
@@ -147,6 +183,7 @@ export async function getFanCollectionProfile(
         productId: bundled.id,
         title: bundled.title,
         type: bundled.type,
+        releaseLabel: releaseLabelFromRow(bundled),
         status: bundled.status,
         coverColor: bundled.coverColor,
         imageUrl: bundled.imageUrl,

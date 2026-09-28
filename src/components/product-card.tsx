@@ -3,6 +3,7 @@ import { Product } from "@/lib/types";
 import { CoverArt } from "./cover-art";
 import { HoverAudioPreview } from "./hover-audio-preview";
 import { formatWon } from "@/lib/format";
+import { formatReleaseLabel } from "@/lib/release-label";
 
 interface ProductCardThemeColors {
   card: string;
@@ -54,7 +55,7 @@ export function ProductCard({
         <h3 className={`truncate font-bold group-hover:underline ${theme ? "" : "text-ink"}`}>
           {product.title}
         </h3>
-        <p className={`text-sm ${theme ? "opacity-70" : "text-muted"}`}>{product.format}</p>
+        <p className={`text-sm ${theme ? "opacity-70" : "text-muted"}`}>{formatReleaseLabel(product)}</p>
         <p className="mt-1 text-sm">
           {isPwyw ? (
             <>

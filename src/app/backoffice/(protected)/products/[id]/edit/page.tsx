@@ -43,6 +43,7 @@ export default async function EditProductPage({
           title: product.title,
           description: product.description,
           format: product.format,
+          releaseType: product.releaseType?.toLowerCase() ?? "single",
           minPrice: product.minPrice,
           suggestedPrice: product.suggestedPrice,
           coverColor: product.coverColor,

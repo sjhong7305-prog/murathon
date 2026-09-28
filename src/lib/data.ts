@@ -1,9 +1,11 @@
 import { prisma } from "@/lib/prisma";
-import type { Artist, Product, AlbumTrack, ArtistMemberSummary } from "./types";
+import type { Artist, Product, ReleaseFormat, AlbumTrack, ArtistMemberSummary } from "./types";
 import { parseArtistTheme } from "./artist-theme";
 
 type DbArtist = Awaited<ReturnType<typeof fetchArtistRow>>;
 type DbProduct = Awaited<ReturnType<typeof fetchProductRow>>;
+
+const PRODUCT_INCLUDE = { releaseFormats: true } as const;
 
 async function fetchArtistRow(where: { id: string } | { slug: string }) {
   return prisma.artist.findUnique({
@@ -13,7 +15,18 @@ async function fetchArtistRow(where: { id: string } | { slug: string }) {
 }
 
 async function fetchProductRow(id: string) {
-  return prisma.product.findUnique({ where: { id } });
+  return prisma.product.findUnique({ where: { id }, include: PRODUCT_INCLUDE });
+}
+
+function toReleaseFormats(rows: NonNullable<DbProduct>["releaseFormats"]): ReleaseFormat[] {
+  return rows.map((f) => ({
+    id: f.id,
+    format: f.format.toLowerCase() as ReleaseFormat["format"],
+    price: f.price,
+    stock: f.stock ?? undefined,
+    includesDigital: f.includesDigital,
+    shippingRequired: f.shippingRequired,
+  }));
 }
 
 async function fetchAlbumTracks(productId: string): Promise<AlbumTrack[]> {
@@ -68,6 +81,8 @@ function toProduct(row: NonNullable<DbProduct>, tracks?: AlbumTrack[]): Product 
     title: row.title,
     description: row.description,
     format: row.format ?? undefined,
+    releaseType: row.releaseType?.toLowerCase() as Product["releaseType"],
+    formats: toReleaseFormats(row.releaseFormats),
     genre: row.genre ?? undefined,
     minPrice: row.minPrice,
     suggestedPrice: row.suggestedPrice,
@@ -102,6 +117,7 @@ export async function getAllArtists(): Promise<Artist[]> {
 export async function getAllProducts(): Promise<Product[]> {
   const rows = await prisma.product.findMany({
     where: { status: "PUBLISHED" },
+    include: PRODUCT_INCLUDE,
     orderBy: { createdAt: "asc" },
   });
   return rows.map((r) => toProduct(r));
@@ -128,6 +144,7 @@ export async function getProductsByArtist(
 ): Promise<Product[]> {
   const rows = await prisma.product.findMany({
     where: { artistId, ...(includeUnpublished ? {} : { status: "PUBLISHED" }) },
+    include: PRODUCT_INCLUDE,
     orderBy: { createdAt: "asc" },
   });
   return rows.map((r) => toProduct(r));
@@ -145,6 +162,7 @@ export async function getProductById(id: string): Promise<Product | undefined> {
 export async function getLatestReleasesByArtist(artistId: string, limit: number): Promise<Product[]> {
   const rows = await prisma.product.findMany({
     where: { artistId, type: { in: ["ALBUM", "TRACK"] }, status: "PUBLISHED" },
+    include: PRODUCT_INCLUDE,
     orderBy: [{ releaseDate: "desc" }, { createdAt: "desc" }],
     take: limit,
   });
@@ -155,6 +173,7 @@ export async function getLatestReleasesByArtist(artistId: string, limit: number)
 export async function getUpcomingShowsByArtist(artistId: string, limit: number): Promise<Product[]> {
   const rows = await prisma.product.findMany({
     where: { artistId, type: "TICKET", eventAt: { gte: new Date() } },
+    include: PRODUCT_INCLUDE,
     orderBy: { eventAt: "asc" },
     take: limit,
   });

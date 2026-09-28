@@ -1,6 +1,21 @@
 export type ProductType = "album" | "track" | "merch" | "ticket";
 export type ProductStatus = "published" | "unpublished";
 
+/** A release's musical shape. Only meaningful for album/track products. */
+export type ReleaseType = "single" | "ep" | "album";
+
+/** A sellable format of a release. Only "digital" is ever created by the UI today. */
+export type ReleaseFormatType = "digital" | "cd" | "vinyl" | "cassette";
+
+export interface ReleaseFormat {
+  id: string;
+  format: ReleaseFormatType;
+  price: number;
+  stock?: number;
+  includesDigital: boolean;
+  shippingRequired: boolean;
+}
+
 import type { ArtistTheme } from "./artist-theme";
 
 export interface ArtistExternalLinks {
@@ -60,6 +75,10 @@ export interface Product {
   title: string;
   description: string;
   format?: string;
+  /** album/track only. See ReleaseType. */
+  releaseType?: ReleaseType;
+  /** album/track only — the release's sellable formats (today: exactly one "digital" row). */
+  formats?: ReleaseFormat[];
   genre?: string;
   minPrice: number;
   suggestedPrice: number;

@@ -1,3 +1,5 @@
+import type { ReleaseType } from "./types";
+
 export type CompositionTrustStatus = "komca" | "koscap" | "none" | "unknown";
 export type PerformanceTrustStatus = "fkmp" | "none" | "unknown";
 export type ProductionTrustStatus = "riak" | "none" | "unknown";
@@ -130,6 +132,7 @@ export interface TrackReleaseInput {
   durationSec?: number;
   minPrice: number;
   suggestedPrice: number;
+  releaseType: ReleaseType;
   rightsDetail: RightsDetail;
   storyPrompts?: StoryPrompts;
   consentConfirmedAt: string;

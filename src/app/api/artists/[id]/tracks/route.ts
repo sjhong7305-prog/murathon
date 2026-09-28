@@ -4,8 +4,11 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { computeRightsStatus, type RightsDetail, type StoryPrompts } from "@/lib/tracks-storage";
 import { serializeTrack } from "@/lib/track-serialize";
-import { MAX_PRICE } from "@/lib/price-validation";
+import { validatePriceFields } from "@/lib/price-validation";
 import { COVER_COLORS } from "@/lib/cover-colors";
+import type { ReleaseType } from "@/lib/types";
+
+const RELEASE_TYPES: ReleaseType[] = ["single", "ep", "album"];
 
 interface CreateTrackReleaseBody {
   title: string;
@@ -17,21 +20,10 @@ interface CreateTrackReleaseBody {
   durationSec?: number;
   minPrice: number;
   suggestedPrice: number;
+  releaseType: ReleaseType;
   rightsDetail: RightsDetail;
   storyPrompts?: StoryPrompts;
   consentConfirmedAt: string;
-}
-
-function validatePriceFields(minPrice: unknown, suggestedPrice: unknown): { ok: true; minPrice: number; suggestedPrice: number } | { ok: false; error: string } {
-  const min = Number(minPrice);
-  const suggested = Number(suggestedPrice);
-  if (!Number.isInteger(min) || min < 0 || min > MAX_PRICE) {
-    return { ok: false, error: `최소 가격은 0 ~ ${MAX_PRICE.toLocaleString("ko-KR")}원 사이여야 해요.` };
-  }
-  if (!Number.isInteger(suggested) || suggested < min || suggested > MAX_PRICE) {
-    return { ok: false, error: "권장 가격은 최소 가격 이상이어야 해요." };
-  }
-  return { ok: true, minPrice: min, suggestedPrice: suggested };
 }
 
 /**
@@ -57,6 +49,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!body.consentConfirmedAt) {
     return NextResponse.json({ error: "동의 확인이 필요해요." }, { status: 400 });
   }
+  if (!RELEASE_TYPES.includes(body.releaseType)) {
+    return NextResponse.json({ error: "릴리즈 유형을 선택해주세요." }, { status: 400 });
+  }
 
   const priceCheck = validatePriceFields(body.minPrice, body.suggestedPrice);
   if (!priceCheck.ok) {
@@ -67,8 +62,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const pricingType = priceCheck.minPrice === 0 ? "PWYW" : "FIXED";
   const coverColor = COVER_COLORS[Math.floor(Math.random() * COVER_COLORS.length)];
 
-  const [track, product] = await prisma.$transaction([
-    prisma.track.create({
+  const [track, product] = await prisma.$transaction(async (tx) => {
+    const track = await tx.track.create({
       data: {
         artistId,
         title: body.title.trim(),
@@ -84,14 +79,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         storyPrompts: (body.storyPrompts ?? undefined) as Prisma.InputJsonValue | undefined,
         consentConfirmedAt: body.consentConfirmedAt,
       },
-    }),
-    prisma.product.create({
+    });
+    const product = await tx.product.create({
       data: {
         artistId,
         type: "TRACK",
         title: body.title.trim(),
         description: body.description.trim(),
-        format: "디지털 싱글",
+        releaseType: body.releaseType.toUpperCase() as "SINGLE" | "EP" | "ALBUM",
         genre: body.genre.trim(),
         minPrice: priceCheck.minPrice,
         suggestedPrice: priceCheck.suggestedPrice,
@@ -100,9 +95,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         previewAudioUrl: body.previewAudioUrl || null,
         releaseDate: new Date(),
         durationSec: body.durationSec ?? null,
+        releaseFormats: {
+          create: {
+            format: "DIGITAL",
+            price: priceCheck.suggestedPrice,
+            includesDigital: true,
+            shippingRequired: false,
+          },
+        },
       },
-    }),
-  ]);
+    });
+    return [track, product] as const;
+  });
 
   return NextResponse.json({ track: serializeTrack(track), productId: product.id });
 }
