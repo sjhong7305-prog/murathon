@@ -16,8 +16,7 @@ function serialize(b: {
   id: string;
   title: string | null;
   message: string;
-  target: "ALL" | "AMOUNT" | "REGION";
-  targetDetail: string | null;
+  target: "ALL" | "PURCHASED";
   visibility: ArtistPostVisibility;
   pinned: boolean;
   reachCount: number;
@@ -28,8 +27,7 @@ function serialize(b: {
     id: b.id,
     title: b.title,
     message: b.message,
-    target: b.target.toLowerCase() as "all" | "amount" | "region",
-    targetDetail: b.targetDetail ?? undefined,
+    target: b.target.toLowerCase() as "all" | "purchased",
     visibility: b.visibility,
     pinned: b.pinned,
     reachCount: b.reachCount,
@@ -55,35 +53,16 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   return NextResponse.json(broadcasts.map(serialize));
 }
 
-/** Leading integer parsed out of a free-text tier label like "10,000원 이상" — 0 if unparseable. */
-function parseAmountThreshold(label: string | null | undefined): number {
-  if (!label) return 0;
-  const digits = label.replace(/[^0-9]/g, "");
-  return digits ? Number(digits) : 0;
-}
-
-async function computeReachCount(
-  artistId: string,
-  target: "ALL" | "AMOUNT" | "REGION",
-  targetDetail: string | null
-): Promise<number> {
-  if (target === "AMOUNT") {
-    const threshold = parseAmountThreshold(targetDetail);
+async function computeReachCount(artistId: string, target: "ALL" | "PURCHASED"): Promise<number> {
+  if (target === "PURCHASED") {
     const items = await prisma.orderItem.findMany({
       where: { product: { artistId } },
-      select: { price: true, quantity: true, order: { select: { buyerUserId: true } } },
+      select: { order: { select: { buyerUserId: true } } },
     });
-    const spendByBuyer = new Map<string, number>();
-    for (const item of items) {
-      const buyerId = item.order.buyerUserId;
-      if (!buyerId) continue; // guest checkouts have no account to notify
-      spendByBuyer.set(buyerId, (spendByBuyer.get(buyerId) ?? 0) + item.price * item.quantity);
-    }
-    return Array.from(spendByBuyer.values()).filter((total) => total >= threshold).length;
+    const buyerIds = new Set(items.map((item) => item.order.buyerUserId).filter((id): id is string => Boolean(id)));
+    return buyerIds.size;
   }
 
-  // "REGION" has no real per-user location field to filter by yet — falls back to the full
-  // follower count, same as "ALL", rather than fabricating a number.
   return prisma.follow.count({ where: { artistId } });
 }
 
@@ -116,10 +95,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const pinned = Boolean(body.pinned);
 
   const target = String(body.target ?? "all").toUpperCase();
-  if (target !== "ALL" && target !== "AMOUNT" && target !== "REGION") {
+  if (target !== "ALL" && target !== "PURCHASED") {
     return NextResponse.json({ error: "대상이 올바르지 않아요." }, { status: 400 });
   }
-  const targetDetail = typeof body.targetDetail === "string" && body.targetDetail ? body.targetDetail : null;
 
   const mediaRaw = Array.isArray(body.media) ? (body.media as unknown[]) : [];
   if (mediaRaw.length > BROADCAST_MAX_MEDIA_COUNT) {
@@ -141,7 +119,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     });
   }
 
-  const reachCount = await computeReachCount(id, target, targetDetail);
+  const reachCount = await computeReachCount(id, target as "ALL" | "PURCHASED");
 
   // Pinning is "at most one per artist" — unset any existing pin and create the new row in the
   // same transaction so a concurrent request can never leave two rows pinned at once.
@@ -154,8 +132,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         artistId: id,
         title,
         message: trimmed,
-        target: target as "ALL" | "AMOUNT" | "REGION",
-        targetDetail,
+        target: target as "ALL" | "PURCHASED",
         visibility: visibility as ArtistPostVisibility,
         pinned,
         reachCount,

@@ -16,3 +16,20 @@ export function validatePrice(raw: unknown, minPrice: number): PriceValidation {
   }
   return { ok: true, price };
 }
+
+export type PriceFieldsValidation =
+  | { ok: true; minPrice: number; suggestedPrice: number }
+  | { ok: false; error: string };
+
+/** Server-side guard for a release's min/suggested price pair — shared by track create and edit. */
+export function validatePriceFields(minPrice: unknown, suggestedPrice: unknown): PriceFieldsValidation {
+  const min = Number(minPrice);
+  const suggested = Number(suggestedPrice);
+  if (!Number.isInteger(min) || min < 0 || min > MAX_PRICE) {
+    return { ok: false, error: `최소 가격은 0 ~ ${MAX_PRICE.toLocaleString("ko-KR")}원 사이여야 해요.` };
+  }
+  if (!Number.isInteger(suggested) || suggested < min || suggested > MAX_PRICE) {
+    return { ok: false, error: "권장 가격은 최소 가격 이상이어야 해요." };
+  }
+  return { ok: true, minPrice: min, suggestedPrice: suggested };
+}

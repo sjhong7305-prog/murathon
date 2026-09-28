@@ -1,4 +1,4 @@
-export type BroadcastTarget = "all" | "amount" | "region";
+export type BroadcastTarget = "all" | "purchased";
 export type NoticeVisibility = "PUBLIC" | "SUPPORTER" | "SUBSCRIBER";
 
 export interface BroadcastMedia {
@@ -13,7 +13,6 @@ export interface Broadcast {
   title: string | null;
   message: string;
   target: BroadcastTarget;
-  targetDetail?: string;
   visibility: NoticeVisibility;
   pinned: boolean;
   reachCount: number;
@@ -33,7 +32,7 @@ export async function getBroadcasts(artistId: string): Promise<Broadcast[]> {
 
 export async function addBroadcast(
   artistId: string,
-  broadcast: Pick<Broadcast, "title" | "message" | "target" | "targetDetail" | "visibility" | "pinned"> & {
+  broadcast: Pick<Broadcast, "title" | "message" | "target" | "visibility" | "pinned"> & {
     media: { url: string; width?: number; height?: number }[];
   }
 ): Promise<Broadcast> {

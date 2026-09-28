@@ -20,13 +20,9 @@ const VISIBILITY_LABEL: Record<NoticeVisibility, string> = {
   SUBSCRIBER: "구독자 전용",
 };
 
-const REGIONS = ["서울", "인천", "제주", "부산"];
-const AMOUNT_TIERS = ["5,000원 이상", "10,000원 이상", "30,000원 이상"];
-
 const TARGET_LABEL: Record<BroadcastTarget, string> = {
   all: "전체 팔로워",
-  amount: "구매 금액별",
-  region: "지역별",
+  purchased: "구매한 팔로워",
 };
 
 const ALLOWED_IMAGE_MIME = ["image/jpeg", "image/png", "image/webp"];
@@ -41,8 +37,6 @@ export function NoticeComposerPanel({ artistId }: { artistId: string }) {
   const [broadcastVisibility, setBroadcastVisibility] = useState<NoticeVisibility>("PUBLIC");
   const [broadcastPinned, setBroadcastPinned] = useState(false);
   const [target, setTarget] = useState<BroadcastTarget>("all");
-  const [amountTier, setAmountTier] = useState(AMOUNT_TIERS[0]);
-  const [region, setRegion] = useState(REGIONS[0]);
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
   const [broadcastImages, setBroadcastImages] = useState<PendingBroadcastImage[]>([]);
   const [broadcastSubmitting, setBroadcastSubmitting] = useState(false);
@@ -107,7 +101,6 @@ export function NoticeComposerPanel({ artistId }: { artistId: string }) {
         title: trimmedTitle,
         message: trimmed,
         target,
-        targetDetail: target === "amount" ? amountTier : target === "region" ? region : undefined,
         visibility: broadcastVisibility,
         pinned: broadcastPinned,
         media,
@@ -156,37 +149,8 @@ export function NoticeComposerPanel({ artistId }: { artistId: string }) {
             className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
           >
             <option value="all">전체 팔로워</option>
-            <option value="amount">구매 금액별</option>
-            <option value="region">지역별</option>
+            <option value="purchased">구매한 팔로워</option>
           </select>
-
-          {target === "amount" && (
-            <select
-              value={amountTier}
-              onChange={(e) => setAmountTier(e.target.value)}
-              className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
-            >
-              {AMOUNT_TIERS.map((tier) => (
-                <option key={tier} value={tier}>
-                  {tier}
-                </option>
-              ))}
-            </select>
-          )}
-
-          {target === "region" && (
-            <select
-              value={region}
-              onChange={(e) => setRegion(e.target.value)}
-              className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
-            >
-              {REGIONS.map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
-            </select>
-          )}
         </div>
 
         {broadcastError && (
@@ -223,7 +187,6 @@ export function NoticeComposerPanel({ artistId }: { artistId: string }) {
                   </span>
                   <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[11px] font-bold text-accent-strong">
                     {TARGET_LABEL[b.target]}
-                    {b.targetDetail ? ` · ${b.targetDetail}` : ""}
                   </span>
                   <span className="text-xs font-semibold text-muted">도달 {b.reachCount.toLocaleString("ko-KR")}명</span>
                   <span className="ml-auto text-xs text-muted">{formatDateTime(b.sentAt)}</span>

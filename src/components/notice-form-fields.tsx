@@ -68,7 +68,7 @@ export function NoticeFormFields({
         <textarea
           value={message}
           onChange={(e) => onMessageChange(e.target.value)}
-          rows={4}
+          rows={6}
           placeholder="팬들에게 전할 소식을 적어주세요."
           className={FIELD_CLASS}
         />

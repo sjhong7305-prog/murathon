@@ -97,7 +97,6 @@ export function NoticeComposerModal({
           title: title.trim(),
           message: message.trim(),
           target: "all",
-          targetDetail: undefined,
           visibility,
           pinned,
           media,
