@@ -15,13 +15,16 @@ export function ArtistCard({ artist }: { artist: Artist }) {
           imageUrl={artist.imageUrl}
           rounded="rounded-full"
           hideLabel
+          initial={artist.name.charAt(0).toUpperCase()}
         />
       </div>
       <div className="min-w-0 w-full">
         <h3 className="truncate text-xs font-bold text-ink group-hover:underline">
           {artist.name}
         </h3>
-        <p className="truncate text-[10px] text-muted">{artist.genre}</p>
+        {artist.genre && (
+          <p className="truncate text-[10px] text-muted">{artist.genre}</p>
+        )}
       </div>
     </Link>
   );

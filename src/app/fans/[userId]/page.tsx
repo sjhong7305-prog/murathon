@@ -100,7 +100,7 @@ export default async function FanCollectionPage({
           {profile.followedArtists.length > 0 && (
             <section className="mt-10">
               <h2 className="mb-3 text-lg font-bold text-ink">팔로잉 아티스트</h2>
-              <div className="flex gap-3 overflow-x-auto pb-2">
+              <div className="scrollbar-hide flex gap-3 overflow-x-auto overscroll-x-contain pb-2">
                 {profile.followedArtists.map((artist) => (
                   <Link
                     key={artist.id}

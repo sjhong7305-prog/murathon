@@ -1,42 +1,72 @@
 import Link from "next/link";
-import { getAllArtists, getAllProducts } from "@/lib/data";
+import { getAllArtists, getAllProducts, getFeaturedReleases, getLatestReleasesByArtist } from "@/lib/data";
 import { GENRES } from "@/lib/genres";
 import { ArtistCard } from "@/components/artist-card";
 import { ProductCard } from "@/components/product-card";
-import { TrendingArtistCard } from "@/components/trending-artist-card";
+import { TrendingArtistRow } from "@/components/trending-artist-row";
 import { HeroBanner } from "@/components/hero-banner";
 
+// Home previously had no revalidate/dynamic config, so `next build` baked it into a static
+// shell that only ever updated on redeploy — new artists/releases never showed up live.
+export const revalidate = 30;
+
 export default async function Home() {
-  const [artists, products] = await Promise.all([getAllArtists(), getAllProducts()]);
-  const featuredAlbums = products.filter((p) => p.type === "album").slice(0, 8);
+  const [artists, products, featuredReleases] = await Promise.all([
+    getAllArtists(),
+    getAllProducts(),
+    getFeaturedReleases(8),
+  ]);
   const upcomingShows = products.filter((p) => p.type === "ticket");
   const trending = [...artists]
     .sort((a, b) => (b.supporters?.length ?? 0) - (a.supporters?.length ?? 0))
-    .slice(0, 3);
+    .slice(0, 8);
+  const trendingWithTracks = await Promise.all(
+    trending.map(async (artist) => {
+      const [track] = await getLatestReleasesByArtist(artist.id, 1);
+      return { artist, track };
+    })
+  );
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10">
       <HeroBanner />
 
       <section className="mb-14">
-        <h2 className="mb-1 text-lg font-bold text-ink">🔥 요즘 뜨는 아티스트</h2>
-        <p className="mb-4 text-sm text-muted">
-          지금 팬들의 후원이 몰리고 있는 아티스트를 만나보세요.
-        </p>
-        <div className="flex gap-4 overflow-x-auto px-1 pb-3 pt-6">
-          {trending.map((artist) => (
-            <TrendingArtistCard key={artist.id} artist={artist} />
-          ))}
-        </div>
+        <h2 className="mb-4 text-lg font-bold text-ink">요즘 뜨는 아티스트</h2>
+        {trendingWithTracks.length > 0 ? (
+          <div className="mx-auto max-w-[880px]">
+            {trendingWithTracks.map(({ artist, track }, i) => (
+              <TrendingArtistRow key={artist.id} index={i + 1} artist={artist} track={track} />
+            ))}
+            <div className="mt-3 text-right">
+              <Link
+                href="/artists"
+                className="text-sm font-semibold text-muted transition hover:text-accent-strong"
+              >
+                더 보기
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <p className="py-10 text-center text-sm text-muted">
+            아직 뜨는 아티스트가 없어요. 곧 새로운 아티스트가 합류할 예정이에요!
+          </p>
+        )}
       </section>
 
       <section className="mb-14">
         <h2 className="mb-4 text-lg font-bold text-ink">지금 인기 있는 발매작</h2>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-6">
-          {featuredAlbums.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {featuredReleases.length > 0 ? (
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-6">
+            {featuredReleases.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        ) : (
+          <p className="py-10 text-center text-sm text-muted">
+            아직 발매된 작품이 없어요. 첫 발매를 가장 먼저 만나보세요!
+          </p>
+        )}
       </section>
 
       {upcomingShows.length > 0 && (
@@ -55,11 +85,17 @@ export default async function Home() {
 
       <section id="artists" className="scroll-mt-20 mb-14">
         <h2 className="mb-4 text-lg font-bold text-ink">아티스트</h2>
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
-          {artists.map((artist) => (
-            <ArtistCard key={artist.id} artist={artist} />
-          ))}
-        </div>
+        {artists.length > 0 ? (
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
+            {artists.map((artist) => (
+              <ArtistCard key={artist.id} artist={artist} />
+            ))}
+          </div>
+        ) : (
+          <p className="py-10 text-center text-sm text-muted">
+            아직 합류한 아티스트가 없어요. 곧 새로운 아티스트가 합류할 예정이에요!
+          </p>
+        )}
       </section>
 
       <section className="rounded-2xl border border-line bg-surface p-6 sm:p-8">

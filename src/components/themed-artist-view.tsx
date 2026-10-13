@@ -45,7 +45,7 @@ export function ThemedArtistView({
         className="sticky top-0 z-10 border-b"
         style={{ backgroundColor: "var(--artist-card)", borderColor: "color-mix(in srgb, var(--artist-text) 12%, transparent)" }}
       >
-        <div className="flex gap-1 overflow-x-auto px-3">
+        <div className="scrollbar-hide flex gap-1 overflow-x-auto overscroll-x-contain px-3">
           {ARTIST_TABS.map((t) => (
             <button
               key={t.key}

@@ -18,6 +18,7 @@ export function CoverArt({
   rounded = "rounded-xl",
   hideLabel = false,
   hasSecret = false,
+  initial,
 }: {
   gradient: string;
   label: string;
@@ -29,12 +30,14 @@ export function CoverArt({
   rounded?: string;
   hideLabel?: boolean;
   hasSecret?: boolean;
+  /** Shown centered over the gradient when there's no imageUrl — e.g. an artist's initial. */
+  initial?: string;
 }) {
   return (
     <div
       className={`relative flex aspect-square w-full items-end overflow-hidden ${rounded} bg-gradient-to-br ${gradient} ${className}`}
     >
-      {imageUrl && (
+      {imageUrl ? (
         <Image
           src={imageUrl}
           alt={label}
@@ -43,6 +46,12 @@ export function CoverArt({
           priority={priority}
           className="object-cover"
         />
+      ) : (
+        initial && (
+          <span className="absolute inset-0 flex items-center justify-center text-2xl font-black text-white/85">
+            {initial}
+          </span>
+        )
       )}
       {!hideLabel && (
         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />

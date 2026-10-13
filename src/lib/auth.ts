@@ -142,7 +142,7 @@ export async function uniqueArtistSlug(base: string) {
   return slug;
 }
 
-/** Single signup path for every account — no role. Intent (fan/artist) only decides the post-signup redirect. */
+/** Single signup path for every account — no role, no fan/artist intent. Becoming an artist happens later via createArtistProfile. */
 export async function signup(input: {
   email: string;
   password: string;
@@ -171,10 +171,10 @@ export async function createArtistProfile(
 
   const slug = input.slug.trim().toLowerCase();
   if (!SLUG_PATTERN.test(slug)) {
-    return { ok: false, error: "slug는 영문 소문자, 숫자, 하이픈만 사용할 수 있어요." };
+    return { ok: false, error: "페이지 주소는 영문 소문자, 숫자, 하이픈(-)만 사용할 수 있어요." };
   }
   if (await prisma.artist.findUnique({ where: { slug } })) {
-    return { ok: false, error: "이미 사용 중인 slug예요." };
+    return { ok: false, error: "이미 사용 중인 페이지 주소예요." };
   }
 
   const genre = input.genre?.trim() ?? "";

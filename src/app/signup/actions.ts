@@ -9,6 +9,12 @@ export interface SignupActionState {
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/** Only allow same-origin relative paths as a post-signup destination, never an absolute/protocol-relative URL. */
+function safeNextPath(next: string): string | null {
+  if (!next.startsWith("/") || next.startsWith("//")) return null;
+  return next;
+}
+
 export async function signupAction(
   _prevState: SignupActionState | undefined,
   formData: FormData
@@ -16,7 +22,7 @@ export async function signupAction(
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const nickname = String(formData.get("nickname") ?? "").trim();
-  const intent = String(formData.get("intent") ?? "fan");
+  const next = String(formData.get("next") ?? "");
 
   if (!EMAIL_PATTERN.test(email)) {
     return { error: "올바른 이메일 형식을 입력해주세요." };
@@ -33,5 +39,5 @@ export async function signupAction(
     return { error: result.error };
   }
 
-  redirect(intent === "artist" ? "/artist/new" : "/");
+  redirect((next && safeNextPath(next)) || "/");
 }

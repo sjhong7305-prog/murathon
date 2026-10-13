@@ -41,7 +41,7 @@ export function ArtistFeedTabContent({
       )}
 
       {members.length > 1 && (
-        <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
+        <div className="scrollbar-hide mb-4 flex gap-2 overflow-x-auto overscroll-x-contain pb-1">
           <button
             type="button"
             onClick={() => setSelectedMemberId(null)}

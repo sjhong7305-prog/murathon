@@ -9,25 +9,30 @@ export interface ArtistNewActionState {
   error?: string;
 }
 
-const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const EXT_BY_TYPE: Record<string, string> = {
+  "image/jpeg": ".jpg",
+  "image/png": ".png",
+  "image/webp": ".webp",
+};
 
-/** Resolves the new artist's avatar: an uploaded file wins over the URL field, matching the pattern in hero-feature-form.tsx. */
 async function resolveImageUrl(formData: FormData, slug: string): Promise<string> {
   const file = formData.get("imageFile");
-  if (file instanceof File && file.size > 0) {
-    if (!file.type.startsWith("image/")) {
-      throw new Error("프로필 이미지는 이미지 파일만 업로드할 수 있어요.");
-    }
-    if (file.size > MAX_IMAGE_BYTES) {
-      throw new Error("프로필 이미지는 8MB 이하로 업로드해주세요.");
-    }
-    const ext = file.name.includes(".") ? file.name.slice(file.name.lastIndexOf(".")) : "";
-    const filename = `${slug}-avatar-${randomUUID()}${ext}`;
-    const uploaded = await uploadToCos("artists", file, filename);
-    return uploaded.url;
+  if (!(file instanceof File) || file.size === 0) {
+    return "";
   }
 
-  return String(formData.get("imageUrl") ?? "").trim();
+  if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+    throw new Error("프로필 이미지는 jpg, png, webp 파일만 업로드할 수 있어요.");
+  }
+  if (file.size > MAX_IMAGE_BYTES) {
+    throw new Error("프로필 이미지는 5MB 이하로 업로드해주세요.");
+  }
+
+  const filename = `${slug}-avatar-${randomUUID()}${EXT_BY_TYPE[file.type]}`;
+  const uploaded = await uploadToCos("artists", file, filename);
+  return uploaded.url;
 }
 
 export async function artistNewAction(
@@ -40,7 +45,7 @@ export async function artistNewAction(
   }
 
   const name = String(formData.get("name") ?? "").trim();
-  const slug = String(formData.get("slug") ?? "").trim();
+  const slug = String(formData.get("address") ?? "").trim();
   const bio = String(formData.get("bio") ?? "").trim();
   const genre = String(formData.get("genre") ?? "").trim();
 
@@ -48,7 +53,7 @@ export async function artistNewAction(
     return { error: "활동명을 입력해주세요." };
   }
   if (!slug) {
-    return { error: "slug를 입력해주세요." };
+    return { error: "페이지 주소를 입력해주세요." };
   }
 
   let imageUrl: string;

@@ -29,7 +29,7 @@ function CategoryNavInner() {
   return (
     <div className="border-t border-line">
       <div className="mx-auto max-w-7xl px-4">
-        <nav className="flex items-center gap-6 overflow-x-auto text-base font-semibold text-muted">
+        <nav className="scrollbar-hide flex items-center gap-6 overflow-x-auto overscroll-x-contain text-base font-semibold text-muted md:overflow-visible">
           {CATEGORIES.map((c) => (
             <Link key={c.href} href={c.href} className="shrink-0 py-3 transition hover:text-ink">
               {c.label}

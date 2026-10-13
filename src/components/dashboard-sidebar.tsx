@@ -67,7 +67,7 @@ export function DashboardSidebar({ slug }: { slug: string }) {
     <>
       {/* Mobile: horizontal top tabs */}
       <div className="mb-6 flex items-center gap-2 lg:hidden">
-        <nav className="-mx-4 flex flex-1 gap-1 overflow-x-auto border-b border-line px-4 pb-px">
+        <nav className="scrollbar-hide -mx-4 flex flex-1 gap-1 overflow-x-auto overscroll-x-contain border-b border-line px-4 pb-px">
           {items.map((item) => (
             <Link
               key={item.fullHref}

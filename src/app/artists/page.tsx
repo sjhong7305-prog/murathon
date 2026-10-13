@@ -24,7 +24,7 @@ export default async function ArtistsPage({
         무레이톤과 함께하는 인디 아티스트들을 소개합니다.
       </p>
 
-      <div className="mt-6 flex gap-2 overflow-x-auto pb-1">
+      <div className="scrollbar-hide mt-6 flex gap-2 overflow-x-auto overscroll-x-contain pb-1">
         <Link
           href="/artists"
           className={`shrink-0 rounded-full border px-4 py-1.5 text-sm font-semibold transition ${

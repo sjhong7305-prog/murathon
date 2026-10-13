@@ -123,6 +123,21 @@ export async function getAllProducts(): Promise<Product[]> {
   return rows.map((r) => toProduct(r));
 }
 
+/**
+ * Up to `limit` published album/track releases across all artists, for the home page's
+ * "지금 인기 있는 발매작" section. No popularity signal (plays/supporters/revenue) exists yet,
+ * so this sorts newest release date first (falling back to createdAt) rather than going quiet.
+ */
+export async function getFeaturedReleases(limit: number): Promise<Product[]> {
+  const rows = await prisma.product.findMany({
+    where: { type: { in: ["ALBUM", "TRACK"] }, status: "PUBLISHED" },
+    include: PRODUCT_INCLUDE,
+    orderBy: [{ releaseDate: "desc" }, { createdAt: "desc" }],
+    take: limit,
+  });
+  return rows.map((r) => toProduct(r));
+}
+
 export async function getArtistBySlug(slug: string): Promise<Artist | undefined> {
   const row = await fetchArtistRow({ slug });
   return row ? toArtist(row) : undefined;

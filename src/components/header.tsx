@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/cart-context";
@@ -35,8 +36,9 @@ export function Header() {
   return (
     <header className="sticky top-0 z-20 border-b border-line bg-cream/95 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-4 sm:gap-5">
-        <Link href="/" className="shrink-0 text-lg font-black tracking-tight text-ink">
-          MU:RATHON
+        <Link href="/" className="flex shrink-0 items-center gap-2">
+          <Image src="/logo.png" alt="MU:RATHON" width={983} height={556} className="h-8 w-auto" priority />
+          <span className="hidden text-lg font-black tracking-tight text-ink sm:inline">MU:RATHON</span>
         </Link>
 
         <SearchBar className="max-w-xs flex-1 sm:max-w-sm" />

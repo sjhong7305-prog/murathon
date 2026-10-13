@@ -21,7 +21,7 @@ export function ArtistTabBar({ slug }: { slug: string }) {
       className="sticky top-[120px] z-10 border-b"
       style={{ backgroundColor: "var(--artist-card)", borderColor: "color-mix(in srgb, var(--artist-text) 12%, transparent)" }}
     >
-      <div className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4">
+      <div className="scrollbar-hide mx-auto flex max-w-7xl gap-1 overflow-x-auto overscroll-x-contain px-4 md:overflow-visible">
         {ARTIST_TABS.map((t) => {
           const href = `${base}${t.suffix}`;
           const active = pathname === href;
