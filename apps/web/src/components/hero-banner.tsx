@@ -60,6 +60,8 @@ export function HeroBanner() {
   const [isPaused, setIsPaused] = useState(false);
   const [heroFeatures, setHeroFeatures] = useState<HeroFeatureDto[] | null>(null);
   const [heroSettings, setHeroSettings] = useState<HeroSettingsDto>(DEFAULT_HERO_SETTINGS);
+  // Image URLs that failed to load (e.g. an upload missing from this app's disk) fall back to the poster.
+  const [brokenImageUrls, setBrokenImageUrls] = useState<ReadonlySet<string>>(new Set());
 
   useEffect(() => {
     fetch("/api/hero-features")
@@ -166,7 +168,7 @@ export function HeroBanner() {
 
         <div className="relative bg-(--hero-paper) sm:min-h-[500px] lg:min-h-[540px]">
           <div className="relative h-[clamp(260px,85vw,380px)] overflow-hidden sm:absolute sm:inset-0 sm:h-auto">
-            {current ? (
+            {current && !brokenImageUrls.has(current.imageUrl) ? (
               <AnimatePresence initial={false}>
                 <motion.div
                   key={current.id}
@@ -186,11 +188,12 @@ export function HeroBanner() {
                     priority={index === 0}
                     sizes="(max-width: 1280px) 100vw, 1248px"
                     className="object-cover"
+                    onError={() => setBrokenImageUrls((prev) => new Set(prev).add(current.imageUrl))}
                   />
                 </motion.div>
               </AnimatePresence>
             ) : (
-              // No artist photo yet: a typographic poster so the headline and CTA still lead the page.
+              // No usable artist photo: a typographic poster so the headline and CTA still lead the page.
               <div aria-hidden className="absolute inset-0">
                 <div className="absolute right-0 top-0 h-full w-1/2 border-l-2 border-(--hero-ink) bg-(--hero-lime) max-sm:w-full max-sm:border-l-0" />
                 <p className="absolute right-6 top-6 text-right text-5xl font-bold leading-none tracking-tight text-(--hero-ink) sm:text-7xl lg:text-8xl">
