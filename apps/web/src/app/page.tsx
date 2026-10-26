@@ -5,6 +5,7 @@ import { ArtistCard } from "@/components/artist-card";
 import { ProductCard } from "@/components/product-card";
 import { TrendingArtistRow } from "@/components/trending-artist-row";
 import { HeroBanner } from "@/components/hero-banner";
+import { ProductCardMarquee } from "@/components/product-card-marquee";
 import { ReleaseMarquee } from "@/components/release-marquee";
 
 // Home previously had no revalidate/dynamic config, so `next build` baked it into a static
@@ -33,6 +34,9 @@ export default async function Home() {
       <div className="hero-theme">
         <HeroBanner />
       </div>
+      <div className="release-marquee-theme">
+        <ReleaseMarquee releases={featuredReleases} artists={artists} />
+      </div>
 
       <section className="mb-14">
         <h2 className="mb-4 text-lg font-bold text-ink">요즘 뜨는 아티스트</h2>
@@ -60,7 +64,7 @@ export default async function Home() {
       <section className="mb-14">
         <h2 className="mb-4 text-lg font-bold text-ink">지금 인기 있는 발매작</h2>
         {featuredReleases.length > 0 ? (
-          <ReleaseMarquee products={featuredReleases} />
+          <ProductCardMarquee products={featuredReleases} />
         ) : (
           <p className="py-10 text-center text-sm text-muted">
             아직 발매된 작품이 없어요. 첫 발매를 가장 먼저 만나보세요!

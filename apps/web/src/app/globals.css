@@ -40,7 +40,7 @@ body {
   display: none;
 }
 
-/* Infinite release marquee — see src/components/release-marquee.tsx.
+/* Infinite release marquee — see src/components/product-card-marquee.tsx.
    Visually identical to the original static grid (grid-cols-2 sm:grid-cols-4 lg:grid-cols-6,
    gap-2); the only difference is that the row scrolls. */
 @keyframes marquee-scroll {
@@ -141,4 +141,35 @@ body {
   --surface: #fffdf7;
   --ink: #141412;
   --accent: #b8ff5a;
+}
+
+/* Release strip under the hero (src/components/release-marquee.tsx). Its spec values for
+   --surface/--ink/--muted/--line and the mono font are scoped to the strip, because those
+   tokens already exist site-wide with other values. */
+.release-marquee-theme {
+  --surface: #fffdf7;
+  --ink: #141412;
+  --muted: #69675f;
+  --line: #d8d4ca;
+  --font-geist-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.release-marquee {
+  animation: release-marquee 30s linear infinite;
+}
+
+.release-marquee:hover {
+  animation-play-state: paused;
+}
+
+@keyframes release-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .release-marquee {
+    animation: none;
+  }
 }

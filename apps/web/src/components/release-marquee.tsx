@@ -1,72 +1,65 @@
-"use client";
+import Link from "next/link";
+import Image from "next/image";
 
-import { useEffect, useRef, useState } from "react";
-import { Product } from "@muraton/shared/types";
-import { ProductCard } from "./product-card";
+type Release = {
+  id: string;
+  title: string;
+  artistId: string;
+  coverColor: string; // Tailwind gradient classes, e.g. "from-lime-300 to-emerald-700"
+  imageUrl?: string;
+};
 
-// Constant scroll speed, so a longer list takes proportionally longer to loop.
-const SPEED_PX_PER_SEC = 40;
+type Artist = { id: string; name: string };
 
-export function ReleaseMarquee({ products }: { products: Product[] }) {
-  const viewportRef = useRef<HTMLDivElement>(null);
-  const setRef = useRef<HTMLUListElement>(null);
-  const [copies, setCopies] = useState(2);
-  const [duration, setDuration] = useState(0);
-
-  useEffect(() => {
-    const viewport = viewportRef.current;
-    const set = setRef.current;
-    if (!viewport || !set) return;
-
-    const measure = () => {
-      const setWidth = set.offsetWidth;
-      if (!setWidth) return;
-      // The track shifts by exactly one set per cycle, so the remaining copies
-      // must still cover the viewport at the end of the cycle — otherwise a gap
-      // opens on the right when there are only a few cards.
-      setCopies(Math.max(2, Math.ceil(viewport.offsetWidth / setWidth) + 1));
-      setDuration(setWidth / SPEED_PX_PER_SEC);
-    };
-
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(viewport);
-    observer.observe(set);
-    return () => observer.disconnect();
-  }, [products]);
-
-  if (products.length === 0) return null;
+export function ReleaseMarquee({
+  releases,
+  artists,
+}: {
+  releases: Release[];
+  artists: Artist[];
+}) {
+  if (releases.length === 0) return null;
+  const artistNames = new Map(artists.map((artist) => [artist.id, artist.name]));
 
   return (
-    <div ref={viewportRef} className="marquee" aria-label="지금 인기 있는 발매작" role="region">
-      <div
-        className="marquee-track"
-        data-ready={duration > 0 ? "" : undefined}
-        style={
-          {
-            "--marquee-copies": copies,
-            "--marquee-duration": `${duration}s`,
-          } as React.CSSProperties
-        }
-      >
-        {Array.from({ length: copies }, (_, copy) => (
-          <ul
-            key={copy}
-            ref={copy === 0 ? setRef : undefined}
-            // Clones are purely visual: hide them from screen readers and tab order.
-            aria-hidden={copy > 0 || undefined}
-            inert={copy > 0}
-            // pr-2 equals gap-2, so the seam between copies matches every other gap.
-            className={`marquee-set flex shrink-0 gap-2 pr-2 ${copy > 0 ? "marquee-clone" : ""}`}
-          >
-            {products.map((product) => (
-              <li key={product.id} className="marquee-item shrink-0">
-                <ProductCard product={product} />
-              </li>
+    <section aria-label="지금 주목받는 음반" className="overflow-hidden border-y border-line py-4">
+      <div className="release-marquee flex w-max">
+        {[0, 1].map((copy) => (
+          <div aria-hidden={copy === 1} className="flex shrink-0 gap-3 pr-3" key={copy}>
+            {releases.map((release, index) => (
+              <Link
+                className="flex w-56 shrink-0 items-center gap-3 rounded-xl bg-surface/70 p-2 transition hover:bg-surface"
+                href={`/products/${release.id}`}
+                key={`${copy}-${release.id}`}
+                tabIndex={copy === 1 ? -1 : undefined}
+              >
+                <div
+                  className={`relative aspect-square w-14 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br ${release.coverColor}`}
+                >
+                  {release.imageUrl && (
+                    <Image
+                      src={release.imageUrl}
+                      alt={release.title}
+                      fill
+                      sizes="56px"
+                      className="object-cover"
+                    />
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-bold text-ink">{release.title}</p>
+                  <p className="mt-1 truncate text-[10px] text-muted">
+                    {artistNames.get(release.artistId) ?? "MU:RATHON"}
+                  </p>
+                </div>
+                <span className="ml-auto pr-1 font-mono text-[9px] text-ink/25">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+              </Link>
             ))}
-          </ul>
+          </div>
         ))}
       </div>
-    </div>
+    </section>
   );
 }
