@@ -30,7 +30,9 @@ export default async function Home() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10">
-      <HeroBanner />
+      <div className="hero-theme">
+        <HeroBanner />
+      </div>
 
       <section className="mb-14">
         <h2 className="mb-4 text-lg font-bold text-ink">요즘 뜨는 아티스트</h2>

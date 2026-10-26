@@ -135,10 +135,10 @@ body {
   }
 }
 
-/* Home hero palette — scoped to the hero banner only (src/components/hero-banner.tsx). */
-.hero-murathon {
-  --hero-paper: #f3f0e8;
-  --hero-lime: #b8ff5a;
-  --hero-orange: #ff704d;
-  --hero-ink: #141412;
+/* Home hero palette — the hero's spec values for --surface/--ink/--accent, scoped to the hero
+   so every other section keeps the site-wide tokens above. */
+.hero-theme {
+  --surface: #fffdf7;
+  --ink: #141412;
+  --accent: #b8ff5a;
 }

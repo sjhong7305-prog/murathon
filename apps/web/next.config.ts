@@ -23,6 +23,10 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+      {
+        protocol: "https",
         hostname: "mzc-sjhong-1368713084.cos.ap-seoul.myqcloud.com",
       },
     ],

@@ -13,16 +13,20 @@ export interface Catalog extends RawCatalog {
   getProductById: (id: string) => Product | undefined;
 }
 
-/** Client-side replacement for the old synchronous data.ts reads — fetches the DB-backed catalog once on mount. */
-export function useCatalog(): Catalog | null {
+/**
+ * Client-side replacement for the old synchronous data.ts reads — fetches the DB-backed catalog once on mount.
+ * Pass `enabled = false` to skip the fetch (e.g. the hero banner's demo mode).
+ */
+export function useCatalog(enabled = true): Catalog | null {
   const [raw, setRaw] = useState<RawCatalog | null>(null);
 
   useEffect(() => {
+    if (!enabled) return;
     fetch("/api/catalog")
       .then((res) => res.json())
       .then(setRaw)
       .catch(() => {});
-  }, []);
+  }, [enabled]);
 
   return useMemo(() => {
     if (!raw) return null;
