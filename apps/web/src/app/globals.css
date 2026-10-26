@@ -39,3 +39,55 @@ body {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* Infinite release marquee — see src/components/release-marquee.tsx */
+@keyframes marquee-scroll {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    /* Shift by exactly one copy of the card set so the loop restarts seamlessly. */
+    transform: translate3d(calc(-100% / var(--marquee-copies)), 0, 0);
+  }
+}
+
+.marquee {
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, #000 2rem, #000 calc(100% - 2rem), transparent);
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+
+.marquee-track[data-ready] {
+  animation: marquee-scroll var(--marquee-duration) linear infinite;
+}
+
+/* Pause on hover only where hover is real, so taps on touch screens don't leave it stuck. */
+@media (hover: hover) {
+  .marquee:hover .marquee-track {
+    animation-play-state: paused;
+  }
+}
+
+.marquee:focus-within .marquee-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee {
+    overflow-x: auto;
+    mask-image: none;
+  }
+
+  .marquee-track[data-ready] {
+    animation: none;
+  }
+
+  .marquee-clone {
+    display: none;
+  }
+}
