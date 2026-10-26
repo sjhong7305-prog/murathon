@@ -91,3 +91,11 @@ body {
     display: none;
   }
 }
+
+/* Home hero palette — scoped to the hero banner only (src/components/hero-banner.tsx). */
+.hero-murathon {
+  --hero-paper: #f3f0e8;
+  --hero-lime: #b8ff5a;
+  --hero-orange: #ff704d;
+  --hero-ink: #141412;
+}
