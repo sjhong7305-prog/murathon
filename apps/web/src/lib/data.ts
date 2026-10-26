@@ -138,6 +138,47 @@ export async function getFeaturedReleases(limit: number): Promise<Product[]> {
   return rows.map((r) => toProduct(r));
 }
 
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** Last calendar week in Korea time: [Monday 00:00 KST of last week, Monday 00:00 KST of this week). */
+export function lastWeekRangeKst(now: Date = new Date()): { start: Date; end: Date } {
+  const kst = new Date(now.getTime() + KST_OFFSET_MS);
+  const daysSinceMonday = (kst.getUTCDay() + 6) % 7;
+  const thisMondayKst = Date.UTC(kst.getUTCFullYear(), kst.getUTCMonth(), kst.getUTCDate() - daysSinceMonday);
+  const end = new Date(thisMondayKst - KST_OFFSET_MS);
+  return { start: new Date(end.getTime() - WEEK_MS), end };
+}
+
+/**
+ * Albums ranked by how many orders included them last week (see lastWeekRangeKst).
+ * Ties break on units sold, then the newer release. Albums with no orders that week are left out,
+ * so this is empty in a week without album sales.
+ */
+export async function getLastWeekPopularAlbums(limit: number): Promise<Product[]> {
+  const { start, end } = lastWeekRangeKst();
+  const ranked = await prisma.$queryRaw<{ productId: string }[]>`
+    SELECT oi."productId"
+    FROM order_items oi
+    JOIN orders o ON o.id = oi."orderId"
+    JOIN products p ON p.id = oi."productId"
+    WHERE o."createdAt" >= ${start} AND o."createdAt" < ${end}
+      AND p.type = 'ALBUM' AND p.status = 'PUBLISHED'
+    GROUP BY oi."productId", p."releaseDate"
+    ORDER BY COUNT(DISTINCT oi."orderId") DESC, SUM(oi.quantity) DESC, p."releaseDate" DESC NULLS LAST
+    LIMIT ${limit}
+  `;
+  if (ranked.length === 0) return [];
+
+  const ids = ranked.map((r) => r.productId);
+  const rows = await prisma.product.findMany({ where: { id: { in: ids } }, include: PRODUCT_INCLUDE });
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  return ids.flatMap((id) => {
+    const row = byId.get(id);
+    return row ? [toProduct(row)] : [];
+  });
+}
+
 export async function getArtistBySlug(slug: string): Promise<Artist | undefined> {
   const row = await fetchArtistRow({ slug });
   return row ? toArtist(row) : undefined;

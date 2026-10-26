@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { getAllArtists, getAllProducts, getFeaturedReleases, getLatestReleasesByArtist } from "@/lib/data";
+import {
+  getAllArtists,
+  getAllProducts,
+  getFeaturedReleases,
+  getLastWeekPopularAlbums,
+  getLatestReleasesByArtist,
+} from "@/lib/data";
 import { GENRES } from "@/lib/genres";
 import { ArtistCard } from "@/components/artist-card";
 import { ProductCard } from "@/components/product-card";
@@ -12,10 +18,11 @@ import { ReleaseMarquee } from "@/components/release-marquee";
 export const revalidate = 30;
 
 export default async function Home() {
-  const [artists, products, featuredReleases] = await Promise.all([
+  const [artists, products, featuredReleases, lastWeekPopularAlbums] = await Promise.all([
     getAllArtists(),
     getAllProducts(),
     getFeaturedReleases(8),
+    getLastWeekPopularAlbums(6),
   ]);
   const upcomingShows = products.filter((p) => p.type === "ticket");
   // getAllArtists returns oldest-first, so reversing gives the most recently joined artists.
@@ -68,16 +75,16 @@ export default async function Home() {
       </section>
 
       <section className="mb-14">
-        <h2 className="mb-4 text-lg font-bold text-ink">지금 인기 있는 발매작</h2>
-        {featuredReleases.length > 0 ? (
+        <h2 className="mb-4 text-lg font-bold text-ink">저번주 인기 앨범</h2>
+        {lastWeekPopularAlbums.length > 0 ? (
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-6">
-            {featuredReleases.map((product) => (
+            {lastWeekPopularAlbums.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
         ) : (
           <p className="py-10 text-center text-sm text-muted">
-            아직 발매된 작품이 없어요. 첫 발매를 가장 먼저 만나보세요!
+            지난주에 주문된 앨범이 아직 없어요. 이번 주 첫 번째 팬이 되어보세요!
           </p>
         )}
       </section>
