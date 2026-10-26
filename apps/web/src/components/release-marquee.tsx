@@ -56,10 +56,11 @@ export function ReleaseMarquee({ products }: { products: Product[] }) {
             // Clones are purely visual: hide them from screen readers and tab order.
             aria-hidden={copy > 0 || undefined}
             inert={copy > 0}
-            className={`flex shrink-0 gap-2 pr-2 ${copy > 0 ? "marquee-clone" : ""}`}
+            // pr-2 equals gap-2, so the seam between copies matches every other gap.
+            className={`marquee-set flex shrink-0 gap-2 pr-2 ${copy > 0 ? "marquee-clone" : ""}`}
           >
             {products.map((product) => (
-              <li key={product.id} className="w-40 shrink-0 sm:w-44 lg:w-48">
+              <li key={product.id} className="marquee-item shrink-0">
                 <ProductCard product={product} />
               </li>
             ))}
