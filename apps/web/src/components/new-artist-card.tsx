@@ -59,7 +59,7 @@ export function NewArtistCard({ artist, track }: { artist: Artist; track?: Produ
             type="button"
             onClick={handlePlayClick}
             aria-label={isPlaying ? `${track.title} 일시정지` : `${artist.name} 최신곡 재생`}
-            className={`absolute right-1 bottom-1 grid size-9 place-items-center rounded-full bg-accent text-ink shadow-[0_6px_16px_rgba(20,20,18,0.25)] transition duration-200 hover:scale-105 focus-visible:translate-y-0 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${
+            className={`absolute right-1 bottom-1 grid size-9 place-items-center rounded-full bg-lime text-ink shadow-[0_6px_16px_rgba(20,20,18,0.25)] transition duration-200 hover:scale-105 focus-visible:translate-y-0 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${
               isCurrent
                 ? "translate-y-0 opacity-100"
                 : "translate-y-0 opacity-100 sm:translate-y-2 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100"
