@@ -11,6 +11,7 @@
   --accent: #8b75d7;
   --accent-strong: #6b4fa8;
   --lime: #b8ff5a;
+  --orange: #ff704d;
 }
 
 @theme inline {
@@ -24,6 +25,7 @@
   --color-accent: var(--accent);
   --color-accent-strong: var(--accent-strong);
   --color-lime: var(--lime);
+  --color-orange: var(--orange);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -50,33 +52,58 @@ body {
   --accent: var(--lime);
 }
 
-/* Release strip under the hero (src/components/release-marquee.tsx). Its spec values for
-   --surface/--ink/--muted/--line and the mono font are scoped to the strip, because those
-   tokens already exist site-wide with other values. */
-.release-marquee-theme {
-  --surface: #fffdf7;
-  --ink: #141412;
-  --muted: #69675f;
-  --line: #d8d4ca;
-  --font-geist-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+/* Home LIVE ticker (src/components/live-support-ticker.tsx): two copies of the list, shifted by one copy. */
+.live-ticker-track {
+  animation: live-ticker 40s linear infinite;
 }
 
-.release-marquee {
-  animation: release-marquee 30s linear infinite;
-}
-
-.release-marquee:hover {
+.live-ticker-viewport:hover .live-ticker-track,
+.live-ticker-viewport:focus-within .live-ticker-track {
   animation-play-state: paused;
 }
 
-@keyframes release-marquee {
+@keyframes live-ticker {
   to {
     transform: translateX(-50%);
   }
 }
 
+.live-dot {
+  animation: live-dot 1.6s ease-out infinite;
+}
+
+@keyframes live-dot {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+/* Dig in 30s cover fan: the playing cover lifts forward. */
+.dig-cover {
+  transition: transform 300ms ease, box-shadow 300ms ease;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .release-marquee {
+  .live-ticker-track,
+  .live-dot {
     animation: none;
+  }
+
+  .live-ticker-viewport {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .live-ticker-clone {
+    display: none;
+  }
+
+  .dig-cover {
+    transition: none;
   }
 }

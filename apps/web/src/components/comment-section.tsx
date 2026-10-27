@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAuth } from "@/context/auth-context";
 import { hasPurchased } from "@/lib/purchase-storage";
 import { getLocalComments, addLocalComment, type Comment } from "@/lib/comment-storage";
 import { mockComments } from "@/lib/mock-comments";
@@ -8,26 +9,14 @@ import { formatDate } from "@muraton/shared/format";
 
 export function CommentSection({ productId }: { productId: string }) {
   const [hydrated, setHydrated] = useState<{ isBuyer: boolean; comments: Comment[] } | null>(null);
-  const [nickname, setNickname] = useState("");
+  const { nickname } = useAuth();
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    let prefillNickname = "";
-    try {
-      const raw = window.sessionStorage.getItem("muraton-last-order");
-      if (raw) {
-        const order = JSON.parse(raw);
-        if (order?.name) prefillNickname = order.name;
-      }
-    } catch {
-      // ignore malformed order snapshot
-    }
-
     Promise.all([hasPurchased(productId), getLocalComments(productId)]).then(
       ([isBuyer, local]) => {
         const base = mockComments[productId] ?? [];
         setHydrated({ isBuyer, comments: [...base, ...local] });
-        if (prefillNickname) setNickname(prefillNickname);
       }
     );
   }, [productId]);
@@ -38,7 +27,7 @@ export function CommentSection({ productId }: { productId: string }) {
     e.preventDefault();
     const trimmed = message.trim();
     if (!trimmed) return;
-    const comment = await addLocalComment(productId, nickname, trimmed);
+    const comment = await addLocalComment(productId, trimmed);
     if (comment) {
       setHydrated((prev) => (prev ? { ...prev, comments: [...prev.comments, comment] } : prev));
     }
@@ -54,12 +43,7 @@ export function CommentSection({ productId }: { productId: string }) {
           onSubmit={handleSubmit}
           className="mb-4 flex flex-col gap-2 rounded-xl border border-line bg-surface p-3"
         >
-          <input
-            value={nickname}
-            onChange={(e) => setNickname(e.target.value)}
-            placeholder="닉네임"
-            className="w-32 rounded-lg border border-line bg-surface px-3 py-1.5 text-sm text-ink outline-none focus:border-accent"
-          />
+          <p className="text-sm font-bold text-ink">{nickname}</p>
           <div className="flex gap-2">
             <input
               value={message}
