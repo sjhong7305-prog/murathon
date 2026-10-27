@@ -4,7 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
+import { ArrowRight, Pause, Play } from "lucide-react";
 import { useCatalog } from "@/lib/use-catalog";
+import type { HomeTrack } from "@/lib/home-types";
+import type { Artist, Product } from "@muraton/shared/types";
+import { useHomeTrackPlayer } from "@/lib/use-home-track-player";
 
 const SLIDE_INTERVAL_MS = 5000;
 
@@ -19,6 +23,8 @@ interface HeroFeatureDto {
   imageUrl: string;
   name: string;
   subtitle: string | null;
+  /** The artist's newest release, played by the "대표곡 듣기" button. */
+  track?: HomeTrack | null;
 }
 
 interface HeroSettingsDto {
@@ -33,7 +39,7 @@ const DEFAULT_HERO_SETTINGS: HeroSettingsDto = {
   position: "BOTTOM_LEFT",
 };
 
-const DEMO_FEATURES = [
+const DEMO_FEATURES: HeroFeatureDto[] = [
   {
     id: "demo-feature",
     name: "Balming Tiger",
@@ -41,8 +47,27 @@ const DEMO_FEATURES = [
       "https://images.unsplash.com/photo-1714589334427-fb015b709c51?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&q=90&w=1600",
     label: "TRENDING",
     subtitle: "Alternative K-pop collective · Seoul",
+    track: null,
   },
 ];
+
+/** Catalog fallback (no hero features configured): pick the artist's newest album/track. */
+function latestCatalogTrack(artist: Artist, products: Product[]): HomeTrack | null {
+  const release = products
+    .filter((p) => p.artistId === artist.id && (p.type === "album" || p.type === "track"))
+    .sort((a, b) => (b.releaseDate ?? "").localeCompare(a.releaseDate ?? ""))[0];
+  if (!release) return null;
+  return {
+    productId: release.id,
+    title: release.title,
+    artistId: artist.id,
+    artistName: artist.name,
+    artistSlug: artist.slug,
+    coverColor: release.coverColor,
+    imageUrl: release.imageUrl,
+    playable: Boolean(release.previewAudioUrl),
+  };
+}
 
 const POSITION_STYLES = {
   TOP_LEFT: {
@@ -114,6 +139,7 @@ export function HeroBanner({ demo = false }: { demo?: boolean }) {
         imageUrl: feature.imageUrl,
         label: feature.label,
         subtitle: feature.subtitle,
+        track: feature.track ?? null,
       }));
     }
     const catalogArtists = (catalog?.artists ?? [])
@@ -124,21 +150,27 @@ export function HeroBanner({ demo = false }: { demo?: boolean }) {
         imageUrl: artist.imageUrl!,
         label: null,
         subtitle: null,
+        track: latestCatalogTrack(artist, catalog?.products ?? []),
       }));
     return catalogArtists.length > 0 ? catalogArtists : DEMO_FEATURES;
   }, [heroFeatures, catalog]);
 
+  const slide = featuredArtists.length > 0 ? featuredArtists[index % featuredArtists.length] : null;
+  const heroTrack = slide?.track && slide.track.playable ? slide.track : undefined;
+  const { isPlaying: isHeroPlaying, onPlayClick } = useHomeTrackPlayer(heroTrack);
+
+  // Hold the slide while its track plays, so the photo matches what's being heard.
   useEffect(() => {
-    if (featuredArtists.length < 2) return;
+    if (featuredArtists.length < 2 || isHeroPlaying) return;
     const interval = setInterval(() => {
       setIndex((i) => (i + 1) % featuredArtists.length);
     }, SLIDE_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [featuredArtists.length]);
+  }, [featuredArtists.length, isHeroPlaying]);
 
-  if (featuredArtists.length === 0) return null;
+  if (!slide) return null;
 
-  const current = featuredArtists[index % featuredArtists.length];
+  const current = slide;
   const positionStyle = POSITION_STYLES[heroSettings.position] ?? POSITION_STYLES.BOTTOM_LEFT;
 
   return (
@@ -200,13 +232,34 @@ export function HeroBanner({ demo = false }: { demo?: boolean }) {
             {heroSettings.subtext && (
               <p className="mt-1 text-sm font-bold text-accent sm:text-base">{heroSettings.subtext}</p>
             )}
-            <Link
-              href="#artists"
-              className="mt-5 inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-xs font-black text-ink transition hover:bg-surface"
-            >
-              아티스트 둘러보기
-              <span aria-hidden>→</span>
-            </Link>
+            <div className="mt-5 flex flex-wrap items-center gap-2">
+              {heroTrack && (
+                <button
+                  type="button"
+                  onClick={onPlayClick}
+                  aria-label={isHeroPlaying ? `${heroTrack.title} 일시정지` : `${current.name} 대표곡 ${heroTrack.title} 듣기`}
+                  className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-xs font-black text-ink transition hover:scale-[1.03] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                >
+                  {isHeroPlaying ? (
+                    <Pause aria-hidden className="size-3.5 fill-current" />
+                  ) : (
+                    <Play aria-hidden className="size-3.5 fill-current" />
+                  )}
+                  {isHeroPlaying ? "재생 중" : "대표곡 듣기"}
+                </button>
+              )}
+              <Link
+                href="/artists"
+                className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-black transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+                  heroTrack
+                    ? "border border-white/50 text-white hover:border-white hover:bg-white/10"
+                    : "bg-accent text-ink hover:bg-surface"
+                }`}
+              >
+                아티스트 둘러보기
+                <ArrowRight aria-hidden className="size-3.5" />
+              </Link>
+            </div>
           </div>
         </div>
       </div>

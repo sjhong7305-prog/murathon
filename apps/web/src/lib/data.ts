@@ -1,6 +1,7 @@
 import { prisma } from "@muraton/db";
 import type { Artist, Product, ReleaseFormat, AlbumTrack, ArtistMemberSummary } from "@muraton/shared/types";
 import { parseArtistTheme } from "@muraton/shared/artist-theme";
+import type { FanVoice, HomeTrack, LiveSupport } from "@/lib/home-types";
 
 type DbArtist = Awaited<ReturnType<typeof fetchArtistRow>>;
 type DbProduct = Awaited<ReturnType<typeof fetchProductRow>>;
@@ -256,4 +257,173 @@ export async function getArtistMembers(artistId: string): Promise<ArtistMemberSu
     imageUrl: m.imageUrl ?? m.artist.imageUrl ?? undefined,
     roleLabel: m.roleLabel ?? undefined,
   }));
+}
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+const HOME_TRACK_SELECT = {
+  id: true,
+  title: true,
+  coverColor: true,
+  imageUrl: true,
+  previewAudioUrl: true,
+  artist: { select: { id: true, name: true, slug: true } },
+} as const;
+
+type HomeTrackRow = {
+  id: string;
+  title: string;
+  coverColor: string;
+  imageUrl: string | null;
+  previewAudioUrl: string | null;
+  artist: { id: string; name: string; slug: string };
+};
+
+function toHomeTrack(product: HomeTrackRow): HomeTrack {
+  return {
+    productId: product.id,
+    title: product.title,
+    artistId: product.artist.id,
+    artistName: product.artist.name,
+    artistSlug: product.artist.slug,
+    coverColor: product.coverColor,
+    imageUrl: product.imageUrl ?? undefined,
+    playable: Boolean(product.previewAudioUrl),
+  };
+}
+
+/**
+ * Newest order items from the last 30 days for the home "LIVE" ticker. Only published products,
+ * and the buyer's nickname only when they opted in as a public supporter — no email, user id, or
+ * cheer message ever leaves this function.
+ */
+export async function getRecentSupports(limit = 20): Promise<LiveSupport[]> {
+  const items = await prisma.orderItem.findMany({
+    where: {
+      order: { createdAt: { gte: new Date(Date.now() - 30 * DAY_MS) } },
+      product: { status: "PUBLISHED" },
+    },
+    select: {
+      id: true,
+      price: true,
+      quantity: true,
+      order: { select: { createdAt: true, listAsSupporter: true, name: true } },
+      product: { select: HOME_TRACK_SELECT },
+    },
+    orderBy: { order: { createdAt: "desc" } },
+    take: limit,
+  });
+  return items.map((item) => ({
+    ...toHomeTrack(item.product),
+    id: item.id,
+    amount: item.price * item.quantity,
+    supporter: item.order.listAsSupporter && item.order.name.trim() ? item.order.name.trim() : null,
+    createdAt: item.order.createdAt.toISOString(),
+  }));
+}
+
+/**
+ * Candidate pool for the home "Dig in 30s" mix: published albums/tracks that actually have preview
+ * audio, newest first. The client picks one release per artist from this pool, so it can reshuffle
+ * without a round trip even when the page itself is cached.
+ */
+export async function getDigCandidates(limit = 24): Promise<HomeTrack[]> {
+  const rows = await prisma.product.findMany({
+    where: { type: { in: ["ALBUM", "TRACK"] }, status: "PUBLISHED", previewAudioUrl: { not: null } },
+    select: HOME_TRACK_SELECT,
+    orderBy: [{ releaseDate: "desc" }, { createdAt: "desc" }],
+    take: limit,
+  });
+  return rows.map(toHomeTrack);
+}
+
+const FAN_VOICE_MIN_LENGTH = 10;
+const FAN_VOICE_MAX_PER_ARTIST = 2;
+
+/**
+ * Public fan messages for the home "Fan Voices" wall: cheer messages from orders whose buyer opted
+ * in as a supporter, plus supporter notes. Newest first, at most two per artist so one popular
+ * release can't take over the wall.
+ */
+export async function getRecentFanVoices(limit = 9): Promise<FanVoice[]> {
+  const [orders, notes] = await Promise.all([
+    prisma.order.findMany({
+      where: { listAsSupporter: true, cheerMessage: { not: null } },
+      select: {
+        id: true,
+        name: true,
+        cheerMessage: true,
+        createdAt: true,
+        items: {
+          where: { product: { status: "PUBLISHED" } },
+          select: { price: true, quantity: true, product: { select: HOME_TRACK_SELECT } },
+          take: 1,
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: limit * 3,
+    }),
+    prisma.supporterNote.findMany({
+      where: { product: { status: "PUBLISHED" } },
+      select: {
+        id: true,
+        message: true,
+        createdAt: true,
+        user: { select: { nickname: true } },
+        product: { select: HOME_TRACK_SELECT },
+      },
+      orderBy: { createdAt: "desc" },
+      take: limit * 3,
+    }),
+  ]);
+
+  const voices: FanVoice[] = [
+    ...orders.flatMap((order) => {
+      const item = order.items[0];
+      if (!item || !order.cheerMessage) return [];
+      return [
+        {
+          ...toHomeTrack(item.product),
+          id: `order-${order.id}`,
+          message: order.cheerMessage.trim(),
+          supporter: order.name,
+          amount: item.price * item.quantity,
+          createdAt: order.createdAt.toISOString(),
+        },
+      ];
+    }),
+    ...notes.map((note) => ({
+      ...toHomeTrack(note.product),
+      id: `note-${note.id}`,
+      message: note.message.trim(),
+      supporter: note.user.nickname,
+      createdAt: note.createdAt.toISOString(),
+    })),
+  ];
+
+  const perArtist = new Map<string, number>();
+  return voices
+    .filter((voice) => voice.message.length >= FAN_VOICE_MIN_LENGTH)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .filter((voice) => {
+      const count = perArtist.get(voice.artistId) ?? 0;
+      if (count >= FAN_VOICE_MAX_PER_ARTIST) return false;
+      perArtist.set(voice.artistId, count + 1);
+      return true;
+    })
+    .slice(0, limit);
+}
+
+/** Newest playable release for each of `artistIds` (used by the hero's "대표곡 듣기" button). */
+export async function getLatestTrackByArtists(artistIds: string[]): Promise<Map<string, HomeTrack>> {
+  if (artistIds.length === 0) return new Map();
+  const rows = await prisma.product.findMany({
+    where: { artistId: { in: artistIds }, type: { in: ["ALBUM", "TRACK"] }, status: "PUBLISHED" },
+    select: HOME_TRACK_SELECT,
+    orderBy: [{ releaseDate: "desc" }, { createdAt: "desc" }],
+  });
+  const byArtist = new Map<string, HomeTrack>();
+  for (const row of rows) {
+    if (!byArtist.has(row.artist.id)) byArtist.set(row.artist.id, toHomeTrack(row));
+  }
+  return byArtist;
 }
