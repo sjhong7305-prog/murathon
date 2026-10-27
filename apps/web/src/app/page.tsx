@@ -120,7 +120,7 @@ export default async function Home() {
 
       {fanVoices.length >= 3 && (
         <section className="mt-16 sm:mt-20">
-          <SectionHeader title="Fan Voices" subtitle="이 음악에 값을 매긴 팬들의 한마디" />
+          <SectionHeader title="Follower Voices" subtitle="이 음악에 값을 매긴 팔로워들의 한마디" />
           <FanVoices voices={fanVoices} />
         </section>
       )}

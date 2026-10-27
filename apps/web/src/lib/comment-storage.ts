@@ -16,7 +16,6 @@ export async function getLocalComments(productId: string): Promise<Comment[]> {
 
 export async function addLocalComment(
   productId: string,
-  nickname: string,
   message: string
 ): Promise<Comment | null> {
   const trimmedMessage = message.trim();
@@ -25,7 +24,7 @@ export async function addLocalComment(
     const res = await fetch(`/api/products/${productId}/comments`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nickname, message: trimmedMessage }),
+      body: JSON.stringify({ message: trimmedMessage }),
     });
     if (!res.ok) return null;
     return await res.json();
