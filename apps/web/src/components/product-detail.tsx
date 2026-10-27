@@ -40,11 +40,16 @@ export function ProductDetail({ product, artist }: { product: Product; artist: A
     setTimeout(() => setJustAdded(false), 1800);
   };
 
+  // Goes straight to checkout with just this item; the cart is left untouched.
   const handleBuyNow = () => {
     if (price === null) return;
     if (!requireLogin()) return;
-    addItem(product.id, price, isMerch ? quantity : 1);
-    router.push("/cart");
+    const params = new URLSearchParams({
+      product: product.id,
+      price: String(price),
+      quantity: String(isMerch ? quantity : 1),
+    });
+    router.push(`/checkout?${params}`);
   };
 
   const buyLabel =

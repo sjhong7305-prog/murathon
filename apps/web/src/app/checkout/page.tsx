@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/auth-context";
@@ -8,7 +8,7 @@ import { useCart } from "@/context/cart-context";
 import { useCatalog } from "@/lib/use-catalog";
 import { formatWon } from "@muraton/shared/format";
 import { createOrder } from "@/lib/orders-client";
-import type { Order } from "@muraton/shared/types";
+import type { CartItem, Order } from "@muraton/shared/types";
 
 const QUICK_EMOJIS = ["❤️", "🙏", "🔥", "✨"];
 
@@ -16,8 +16,25 @@ function generateOrderId() {
   return `MRT-${Date.now().toString(36).toUpperCase()}`;
 }
 
-export default function CheckoutPage() {
-  const { items, totalPrice, clearCart } = useCart();
+/**
+ * "바로 구매" sends `?product=<id>&price=<won>&quantity=<n>`: checkout then covers only that
+ * item and leaves the cart alone. Anything malformed falls back to the normal cart checkout.
+ */
+function parseBuyNow(query: Record<string, string | string[] | undefined>): CartItem | null {
+  const productId = typeof query.product === "string" ? query.product : "";
+  const price = Number(query.price);
+  const quantity = Number(query.quantity ?? 1);
+  if (!productId || !Number.isInteger(price) || price < 0 || !Number.isInteger(quantity) || quantity < 1) {
+    return null;
+  }
+  return { productId, price, quantity };
+}
+
+export default function CheckoutPage({ searchParams }: PageProps<"/checkout">) {
+  const buyNowItem = parseBuyNow(use(searchParams));
+  const cart = useCart();
+  const items = buyNowItem ? [buyNowItem] : cart.items;
+  const totalPrice = buyNowItem ? buyNowItem.price * buyNowItem.quantity : cart.totalPrice;
   const catalog = useCatalog();
   const router = useRouter();
   const { isLoggedIn, loading: authLoading, nickname, email } = useAuth();
@@ -99,7 +116,7 @@ export default function CheckoutPage() {
     });
 
     window.sessionStorage.setItem("muraton-last-order", JSON.stringify(order));
-    clearCart();
+    if (!buyNowItem) cart.clearCart();
     router.push("/checkout/success");
   };
 
