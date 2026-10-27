@@ -21,12 +21,12 @@ export interface LiveSupport extends HomeTrack {
   createdAt: string;
 }
 
-/** A public cheer message (order opted in as supporter) or supporter note. */
+/** A public cheer message (order opted in as supporter), supporter note, or product comment. */
 export interface FanVoice extends HomeTrack {
   id: string;
   message: string;
   supporter: string;
-  /** Only present for order-backed messages — supporter notes have no paid amount attached. */
+  /** Only present for order-backed messages — notes and comments have no paid amount attached. */
   amount?: number;
   createdAt: string;
 }

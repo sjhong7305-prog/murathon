@@ -341,11 +341,11 @@ const FAN_VOICE_MAX_PER_ARTIST = 2;
 
 /**
  * Public fan messages for the home "Fan Voices" wall: cheer messages from orders whose buyer opted
- * in as a supporter, plus supporter notes. Newest first, at most two per artist so one popular
+ * in as a supporter, supporter notes, and product page comments. Newest first, at most two per artist so one popular
  * release can't take over the wall.
  */
 export async function getRecentFanVoices(limit = 9): Promise<FanVoice[]> {
-  const [orders, notes] = await Promise.all([
+  const [orders, notes, comments] = await Promise.all([
     prisma.order.findMany({
       where: { listAsSupporter: true, cheerMessage: { not: null } },
       select: {
@@ -374,6 +374,13 @@ export async function getRecentFanVoices(limit = 9): Promise<FanVoice[]> {
         user: { select: { nickname: true } },
         product: { select: HOME_TRACK_SELECT },
       },
+      orderBy: { createdAt: "desc" },
+      take: limit * 3,
+    }),
+    // Product page comments are already public under the nickname the commenter chose.
+    prisma.productComment.findMany({
+      where: { product: { status: "PUBLISHED" } },
+      select: { id: true, nickname: true, message: true, createdAt: true, product: { select: HOME_TRACK_SELECT } },
       orderBy: { createdAt: "desc" },
       take: limit * 3,
     }),
@@ -418,6 +425,13 @@ export async function getRecentFanVoices(limit = 9): Promise<FanVoice[]> {
       message: note.message.trim(),
       supporter: note.user.nickname,
       createdAt: note.createdAt.toISOString(),
+    })),
+    ...comments.map((comment) => ({
+      ...toHomeTrack(comment.product),
+      id: `comment-${comment.id}`,
+      message: comment.message.trim(),
+      supporter: comment.nickname,
+      createdAt: comment.createdAt.toISOString(),
     })),
   ];
 
