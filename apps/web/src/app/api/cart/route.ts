@@ -1,11 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@muraton/db";
+import { prisma, type ProductType } from "@muraton/db";
 import { getOrCreateCart } from "@/lib/guest-cart";
 import { validatePrice } from "@/lib/price-validation";
 
+/**
+ * Only merch is bought by quantity. A digital release or a ticket is one item no matter how many
+ * times it's added, so those always count as 1 — including rows saved before this rule existed.
+ */
+function cartQuantity(type: ProductType, quantity: number) {
+  return type === "MERCH" ? Math.max(1, quantity) : 1;
+}
+
 async function serializedItems(cartId: string) {
-  const items = await prisma.cartItem.findMany({ where: { cartId } });
-  return items.map((i) => ({ productId: i.productId, price: i.price, quantity: i.quantity }));
+  const items = await prisma.cartItem.findMany({ where: { cartId }, include: { product: { select: { type: true } } } });
+  return items.map((i) => ({
+    productId: i.productId,
+    price: i.price,
+    quantity: cartQuantity(i.product.type, i.quantity),
+  }));
 }
 
 export async function GET() {
@@ -18,7 +30,7 @@ export async function POST(req: NextRequest) {
 
   const product = await prisma.product.findUnique({
     where: { id: productId },
-    select: { minPrice: true, status: true },
+    select: { minPrice: true, status: true, type: true },
   });
   if (!product) {
     return NextResponse.json({ error: "상품을 찾을 수 없어요." }, { status: 404 });
@@ -40,11 +52,11 @@ export async function POST(req: NextRequest) {
   if (existing) {
     await prisma.cartItem.update({
       where: { id: existing.id },
-      data: { price: validation.price, quantity: existing.quantity + quantity },
+      data: { price: validation.price, quantity: cartQuantity(product.type, existing.quantity + quantity) },
     });
   } else {
     await prisma.cartItem.create({
-      data: { cartId: cart.id, productId, price: validation.price, quantity },
+      data: { cartId: cart.id, productId, price: validation.price, quantity: cartQuantity(product.type, quantity) },
     });
   }
 
@@ -55,12 +67,13 @@ export async function PATCH(req: NextRequest) {
   const { productId, price, quantity } = await req.json();
   const cart = await getOrCreateCart();
 
+  const product = await prisma.product.findUnique({ where: { id: productId }, select: { minPrice: true, type: true } });
+  if (!product) {
+    return NextResponse.json({ error: "상품을 찾을 수 없어요." }, { status: 404 });
+  }
+
   let validatedPrice: number | undefined;
   if (price !== undefined) {
-    const product = await prisma.product.findUnique({ where: { id: productId }, select: { minPrice: true } });
-    if (!product) {
-      return NextResponse.json({ error: "상품을 찾을 수 없어요." }, { status: 404 });
-    }
     const validation = validatePrice(price, product.minPrice);
     if (!validation.ok) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
@@ -72,7 +85,7 @@ export async function PATCH(req: NextRequest) {
     where: { cartId: cart.id, productId },
     data: {
       ...(validatedPrice !== undefined ? { price: validatedPrice } : {}),
-      ...(quantity !== undefined ? { quantity } : {}),
+      ...(quantity !== undefined ? { quantity: cartQuantity(product.type, quantity) } : {}),
     },
   });
 

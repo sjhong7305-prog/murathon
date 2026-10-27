@@ -35,7 +35,7 @@ export function ProductDetail({ product, artist }: { product: Product; artist: A
   const handleAdd = () => {
     if (price === null) return;
     if (!requireLogin()) return;
-    addItem(product.id, price, isMerch ? quantity : 1);
+    addItem(product.id, price, isMerch ? quantity : 1, isMerch);
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 1800);
   };

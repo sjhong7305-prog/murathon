@@ -12,7 +12,8 @@ import { CartItem } from "@muraton/shared/types";
 
 interface CartContextValue {
   items: CartItem[];
-  addItem: (productId: string, price: number, quantity?: number) => void;
+  /** `stack` adds to an existing line's quantity (merch); otherwise re-adding just updates the price. */
+  addItem: (productId: string, price: number, quantity?: number, stack?: boolean) => void;
   removeItem: (productId: string) => void;
   updatePrice: (productId: string, price: number) => void;
   updateQuantity: (productId: string, quantity: number) => void;
@@ -35,13 +36,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
       });
   }, []);
 
-  const addItem = (productId: string, price: number, quantity = 1) => {
+  const addItem = (productId: string, price: number, quantity = 1, stack = false) => {
     setItems((prev) => {
       const existing = prev.find((i) => i.productId === productId);
       if (existing) {
         return prev.map((i) =>
           i.productId === productId
-            ? { ...i, price, quantity: i.quantity + quantity }
+            ? { ...i, price, quantity: stack ? i.quantity + quantity : i.quantity }
             : i
         );
       }
@@ -51,7 +52,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ productId, price, quantity }),
-    }).catch(() => {});
+    })
+      // The server owns the quantity rules (see api/cart), so settle on what it stored.
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: CartItem[] | null) => data && setItems(data))
+      .catch(() => {});
   };
 
   const removeItem = (productId: string) => {
