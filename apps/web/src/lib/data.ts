@@ -362,10 +362,13 @@ export async function getRecentFanVoices(limit = 9): Promise<FanVoice[]> {
       orderBy: { createdAt: "desc" },
       take: limit * 3,
     }),
+    // Notes from private collections stay private, same as on the fan's collection page.
     prisma.supporterNote.findMany({
-      where: { product: { status: "PUBLISHED" } },
+      where: { product: { status: "PUBLISHED" }, user: { collectionPrivacy: "PUBLIC" } },
       select: {
         id: true,
+        userId: true,
+        productId: true,
         message: true,
         createdAt: true,
         user: { select: { nickname: true } },
@@ -375,6 +378,24 @@ export async function getRecentFanVoices(limit = 9): Promise<FanVoice[]> {
       take: limit * 3,
     }),
   ]);
+
+  // A note shows the fan's nickname, so it needs the same opt-in as the ticker: an order for that
+  // product where the buyer chose to be listed as a supporter.
+  const optedIn = new Set<string>();
+  if (notes.length > 0) {
+    const supporterOrders = await prisma.order.findMany({
+      where: {
+        listAsSupporter: true,
+        buyerUserId: { in: [...new Set(notes.map((note) => note.userId))] },
+        items: { some: { productId: { in: [...new Set(notes.map((note) => note.productId))] } } },
+      },
+      select: { buyerUserId: true, items: { select: { productId: true } } },
+    });
+    for (const order of supporterOrders) {
+      for (const item of order.items) optedIn.add(`${order.buyerUserId}:${item.productId}`);
+    }
+  }
+  const publicNotes = notes.filter((note) => optedIn.has(`${note.userId}:${note.productId}`));
 
   const voices: FanVoice[] = [
     ...orders.flatMap((order) => {
@@ -391,7 +412,7 @@ export async function getRecentFanVoices(limit = 9): Promise<FanVoice[]> {
         },
       ];
     }),
-    ...notes.map((note) => ({
+    ...publicNotes.map((note) => ({
       ...toHomeTrack(note.product),
       id: `note-${note.id}`,
       message: note.message.trim(),
