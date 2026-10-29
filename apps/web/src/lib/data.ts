@@ -208,13 +208,8 @@ export async function getProductsByArtist(
   return rows.map((r) => toProduct(r));
 }
 
-/** Published albums and tracks with their tracklists, for the music browse page. Newest release first. */
-export async function getMusicCatalog(): Promise<Product[]> {
-  const rows = await prisma.product.findMany({
-    where: { status: "PUBLISHED", type: { in: ["ALBUM", "TRACK"] } },
-    include: PRODUCT_INCLUDE,
-    orderBy: [{ releaseDate: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
-  });
+/** Maps product rows to Products with their tracklists, loading every tracklist in one query. */
+async function withTracklists(rows: NonNullable<DbProduct>[]): Promise<Product[]> {
   const trackRows = await prisma.albumTrack.findMany({
     where: { productId: { in: rows.map((r) => r.id) } },
     orderBy: { trackNumber: "asc" },
@@ -233,6 +228,26 @@ export async function getMusicCatalog(): Promise<Product[]> {
     tracksByProduct.set(t.productId, list);
   }
   return rows.map((r) => toProduct(r, tracksByProduct.get(r.id) ?? []));
+}
+
+/** Published albums and tracks with their tracklists, for the music browse page. Newest release first. */
+export async function getMusicCatalog(): Promise<Product[]> {
+  const rows = await prisma.product.findMany({
+    where: { status: "PUBLISHED", type: { in: ["ALBUM", "TRACK"] } },
+    include: PRODUCT_INCLUDE,
+    orderBy: [{ releaseDate: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
+  });
+  return withTracklists(rows);
+}
+
+/** A fan's wishlist (liked releases), most recently added first. Unpublished releases drop out. */
+export async function getWishlist(userId: string): Promise<Product[]> {
+  const likes = await prisma.productLike.findMany({
+    where: { userId, product: { status: "PUBLISHED" } },
+    orderBy: { createdAt: "desc" },
+    include: { product: { include: PRODUCT_INCLUDE } },
+  });
+  return withTracklists(likes.map((like) => like.product));
 }
 
 export async function getProductById(id: string): Promise<Product | undefined> {
