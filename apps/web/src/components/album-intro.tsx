@@ -26,10 +26,10 @@ export function AlbumIntro({
   const meta = [releaseDate ? formatReleaseDate(releaseDate) : null, genre, credits].filter(Boolean);
 
   return (
-    <section className="mt-8">
-      <h2 className="mb-3 text-lg font-bold text-ink">앨범 소개</h2>
+    <section className="mt-14">
+      <h2 className="mb-4 text-2xl font-bold tracking-tight text-ink">앨범 소개</h2>
       <p
-        className={`whitespace-pre-wrap text-sm leading-relaxed text-ink ${
+        className={`max-w-[65ch] whitespace-pre-wrap text-[15px] leading-relaxed text-ink/85 ${
           expanded ? "" : "line-clamp-4"
         }`}
       >
@@ -38,7 +38,7 @@ export function AlbumIntro({
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="mt-2 text-xs font-semibold text-accent-strong hover:underline"
+        className="mt-1 inline-flex min-h-11 items-center text-sm font-semibold text-accent-strong hover:underline"
       >
         {expanded ? "접기" : "더보기"}
       </button>

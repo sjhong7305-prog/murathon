@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Lock } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { hasPurchased } from "@/lib/purchase-storage";
 import { getLocalComments, addLocalComment, type Comment } from "@/lib/comment-storage";
@@ -35,8 +36,10 @@ export function CommentSection({ productId }: { productId: string }) {
   };
 
   return (
-    <section className="mt-10">
-      <h2 className="mb-3 text-lg font-bold text-ink">댓글 {hydrated.comments.length}개</h2>
+    <section className="mt-14">
+      <h2 className="mb-4 text-2xl font-bold tracking-tight text-ink">
+        댓글 <span className="text-muted tabular-nums">{hydrated.comments.length}</span>
+      </h2>
 
       {hydrated.isBuyer ? (
         <form
@@ -49,11 +52,11 @@ export function CommentSection({ productId }: { productId: string }) {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="구매자만 남길 수 있는 댓글이에요"
-              className="flex-1 rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
+              className="min-h-11 flex-1 rounded-full border border-line bg-surface px-4 text-sm text-ink outline-none focus:border-accent"
             />
             <button
               type="submit"
-              className="shrink-0 rounded-lg bg-accent px-4 py-2 text-sm font-bold text-white transition hover:bg-accent-strong"
+              className="min-h-11 shrink-0 rounded-full bg-accent px-5 text-sm font-bold text-white transition hover:bg-accent-strong"
             >
               등록
             </button>
@@ -61,8 +64,9 @@ export function CommentSection({ productId }: { productId: string }) {
         </form>
       ) : (
         <div className="mb-4 flex items-center gap-2 rounded-xl border border-line bg-surface p-3">
-          <span className="rounded-full bg-surface px-2.5 py-1 text-xs font-bold text-muted">
-            🔒 이 곡을 구매한 사람만 댓글을 달 수 있습니다
+          <span className="flex items-center gap-1.5 px-1 text-xs font-bold text-muted">
+            <Lock aria-hidden className="size-3.5" />
+            이 곡을 구매한 사람만 댓글을 달 수 있습니다
           </span>
         </div>
       )}

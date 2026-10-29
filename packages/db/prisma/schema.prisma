@@ -144,6 +144,7 @@ model User {
   artistPostComments ArtistPostComment[]
   artistPostLikes    ArtistPostLike[]
   supporterNotes     SupporterNote[]
+  productLikes       ProductLike[]
   fanFollowing       FanFollow[]         @relation("FanFollowFollower")
   fanFollowers       FanFollow[]         @relation("FanFollowFollowing")
   playlists          Playlist[]
@@ -457,6 +458,7 @@ model Product {
   communityPosts CommunityPost[]
   supporterNotes SupporterNote[]
   playlistTracks PlaylistTrack[]
+  likes          ProductLike[]
   albumTracks    AlbumTrack[]
   releaseFormats ReleaseFormat[]
 
@@ -704,6 +706,19 @@ model Playlist {
  * A playlist entry — productId points at a Product (type ALBUM or TRACK), not the separate
  * rights-registration Track model, since playlists curate what's actually purchasable/purchased.
  */
+/// A fan's "좋아요" on a release, toggled from the bottom player's heart button.
+model ProductLike {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@map("product_likes")
+}
+
 model PlaylistTrack {
   id         String   @id @default(cuid())
   playlistId String
