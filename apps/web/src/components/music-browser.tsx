@@ -11,8 +11,44 @@ import { CoverArt } from "@/components/cover-art";
 import { TrackRows } from "@/components/album-track-list";
 import { albumPlayerTracks } from "@/lib/album-player-tracks";
 import { useProductLike } from "@/lib/use-product-like";
+import { GENRES } from "@/lib/genres";
 
-export type MusicArtist = Pick<Artist, "id" | "name" | "slug">;
+export type MusicArtist = Pick<Artist, "id" | "name" | "slug"> & Partial<Pick<Artist, "genre" | "genreTags">>;
+
+/** Korean names artists commonly type for a genre, so free-text artist genres still match. */
+const KOREAN_GENRE_NAMES: Record<string, string[]> = {
+  acoustic: ["어쿠스틱"],
+  ambient: ["앰비언트"],
+  classical: ["클래식"],
+  country: ["컨트리"],
+  electronic: ["일렉트로닉", "전자음악", "edm"],
+  folk: ["포크"],
+  "hip-hop-rap": ["힙합", "랩", "hiphop", "rap"],
+  jazz: ["재즈"],
+  metal: ["메탈"],
+  pop: ["팝", "kpop", "k-pop"],
+  reggae: ["레게"],
+  "rnb-soul": ["알앤비", "r&b", "rnb", "소울", "soul"],
+  rock: ["록", "락"],
+  soundtrack: ["ost", "사운드트랙"],
+};
+
+/**
+ * Whether a release belongs to a genre (GENRES slug). The release's own genre wins; releases
+ * without one fall back to their artist's genre tags / free-text genre.
+ */
+function inGenre(release: Product, artist: MusicArtist | undefined, slug: string) {
+  if (release.genre) return release.genre === slug;
+  const genre = GENRES.find((g) => g.slug === slug);
+  if (!genre || !artist) return false;
+  const words = [...(artist.genreTags ?? []), artist.genre ?? ""]
+    .join(" ")
+    .toLowerCase()
+    .split(/[\s,·/]+/)
+    .filter(Boolean);
+  const names = [genre.slug, ...genre.label.toLowerCase().split("/"), ...(KOREAN_GENRE_NAMES[slug] ?? [])];
+  return names.some((name) => words.includes(name));
+}
 
 function isPlayable(release: Product) {
   return Boolean(release.previewAudioUrl) || Boolean(release.tracks?.some((t) => t.hasPreview));
@@ -59,22 +95,39 @@ export function MusicBrowser({
   releases,
   artists,
   initialQuery,
+  initialGenre,
 }: {
   releases: Product[];
   artists: MusicArtist[];
   initialQuery: string;
+  initialGenre: string | null;
 }) {
   const [query, setQuery] = useState(initialQuery);
+  const [genre, setGenre] = useState<string | null>(initialGenre);
   const artistById = useMemo(() => new Map(artists.map((a) => [a.id, a])), [artists]);
   const trimmed = query.trim();
-  const visible = releases.filter((r) => matches(r, artistById.get(r.artistId), trimmed));
+  const visible = releases.filter((r) => {
+    const artist = artistById.get(r.artistId);
+    return (!genre || inGenre(r, artist, genre)) && matches(r, artist, trimmed);
+  });
+  const genreLabel = GENRES.find((g) => g.slug === genre)?.label;
+
+  // Keep the URL shareable without a server round trip for every keystroke.
+  const syncUrl = (nextQuery: string, nextGenre: string | null) => {
+    const params = new URLSearchParams({ type: "music" });
+    if (nextGenre) params.set("genre", nextGenre);
+    if (nextQuery.trim()) params.set("q", nextQuery.trim());
+    window.history.replaceState(null, "", `/search?${params}`);
+  };
 
   const updateQuery = (value: string) => {
     setQuery(value);
-    // Keep the URL shareable without a server round trip for every keystroke.
-    const params = new URLSearchParams({ type: "music" });
-    if (value.trim()) params.set("q", value.trim());
-    window.history.replaceState(null, "", `/search?${params}`);
+    syncUrl(value, genre);
+  };
+
+  const selectGenre = (slug: string | null) => {
+    setGenre(slug);
+    syncUrl(query, slug);
   };
 
   return (
@@ -105,16 +158,56 @@ export function MusicBrowser({
         )}
       </form>
 
-      <p className="mt-8 mb-3 text-sm text-muted tabular-nums" aria-live="polite">
-        {trimmed ? `"${trimmed}" 검색 결과 ${visible.length}개` : `음원 ${visible.length}개`}
+      <nav aria-label="장르" className="mx-auto mt-5 max-w-5xl">
+        <ul className="scrollbar-hide -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0">
+          {[{ slug: null, label: "전체" }, ...GENRES].map((g) => {
+            const active = genre === g.slug;
+            return (
+              <li key={g.slug ?? "all"} className="shrink-0">
+                <button
+                  type="button"
+                  onClick={() => selectGenre(active && g.slug ? null : g.slug)}
+                  aria-pressed={active}
+                  className={`min-h-10 rounded-full border px-4 text-sm font-semibold transition ${
+                    active
+                      ? "border-ink bg-ink text-cream"
+                      : "border-line bg-surface text-ink hover:border-ink/40 hover:bg-lime/30"
+                  }`}
+                >
+                  {g.label}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+
+      {/* Result counts are announced to screen readers only. */}
+      <p className="sr-only" aria-live="polite">
+        {`${genreLabel ? `${genreLabel} ` : ""}${trimmed ? `"${trimmed}" ` : ""}음원 ${visible.length}개`}
       </p>
 
       {visible.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-line px-6 py-14 text-center text-sm text-muted">
-          찾는 음원이 없어요. 아티스트 이름이나 곡 제목으로 다시 검색해보세요.
-        </p>
+        <div className="mt-8 rounded-2xl border border-dashed border-line px-6 py-14 text-center text-sm text-muted">
+          <p>
+            {genreLabel && !trimmed
+              ? `아직 ${genreLabel} 음원이 없어요.`
+              : "찾는 음원이 없어요. 아티스트 이름이나 곡 제목으로 다시 검색해보세요."}
+          </p>
+          {genre && (
+            <button
+              type="button"
+              onClick={() => selectGenre(null)}
+              className="mt-3 min-h-11 font-bold text-ink underline-offset-4 hover:underline"
+            >
+              전체 장르 보기
+            </button>
+          )}
+        </div>
       ) : (
-        <ReleaseGrid releases={visible} artists={artists} />
+        <div className="mt-8">
+          <ReleaseGrid releases={visible} artists={artists} />
+        </div>
       )}
     </div>
   );
