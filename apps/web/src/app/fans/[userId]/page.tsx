@@ -223,7 +223,7 @@ export default async function FanCollectionPage({
                       href={`/playlists/${p.id}`}
                       className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-3 transition hover:border-accent/40"
                     >
-                      <div className="flex aspect-square w-full items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-3xl text-white">
+                      <div className="flex aspect-square w-full items-center justify-center rounded-xl bg-gradient-to-br from-stone-700 to-stone-900 text-3xl text-white">
                         🎵
                       </div>
                       <div>

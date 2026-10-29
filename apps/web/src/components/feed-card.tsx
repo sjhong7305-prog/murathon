@@ -310,7 +310,7 @@ export function FeedCard({
           )}
 
           {post.locked ? (
-            <div className="relative flex aspect-[4/5] w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-violet-500 to-purple-600 p-4 text-center">
+            <div className="relative flex aspect-[4/5] w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-stone-700 to-stone-900 p-4 text-center">
               <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90">
                 <Lock size={18} className="text-accent-strong" />
               </span>

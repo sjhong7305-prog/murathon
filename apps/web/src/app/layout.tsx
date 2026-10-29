@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
+// Pretendard is the primary UI font (Korean first). The dynamic-subset build splits the font by
+// unicode-range, so a page only downloads the glyph chunks it actually renders.
+import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 import "./globals.css";
 import { CartProvider } from "@/context/cart-context";
 import { AuthProvider } from "@/context/auth-context";
@@ -34,8 +38,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <PlayerProvider>
               <Header />
               <main className="flex-1 pb-20">{children}</main>
-              <footer className="border-t border-line py-8 text-center text-xs text-muted">
-                MU:RATHON — 아티스트 직거래 플랫폼 프로토타입. 결제는 실제로 처리되지 않습니다.
+              <footer className="border-t border-line">
+                <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-10 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-black tracking-tight text-ink">MU:RATHON</p>
+                    <p className="mt-1">아티스트 직거래 플랫폼 프로토타입. 결제는 실제로 처리되지 않습니다.</p>
+                  </div>
+                  <nav className="flex gap-4 font-medium">
+                    <Link href="/artists" className="transition-colors hover:text-ink">아티스트</Link>
+                    <Link href="/community" className="transition-colors hover:text-ink">커뮤니티</Link>
+                    <Link href="/licenses" className="transition-colors hover:text-ink">폰트 라이선스</Link>
+                  </nav>
+                </div>
               </footer>
               <MiniPlayer />
             </PlayerProvider>
