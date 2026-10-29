@@ -2,6 +2,7 @@ import { getAllArtists, getAllProducts, getMusicCatalog } from "@/lib/data";
 import { ProductCard } from "@/components/product-card";
 import { ArtistCard } from "@/components/artist-card";
 import { MusicBrowser } from "@/components/music-browser";
+import { GENRES } from "@/lib/genres";
 import { formatReleaseLabel } from "@muraton/shared/release-label";
 import type { ProductType } from "@muraton/shared/types";
 
@@ -20,9 +21,9 @@ const TYPE_LABEL: Record<string, string> = {
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; type?: string }>;
+  searchParams: Promise<{ q?: string; type?: string; genre?: string }>;
 }) {
-  const { q, type } = await searchParams;
+  const { q, type, genre } = await searchParams;
   const query = (q ?? "").trim().toLowerCase();
   const activeType = type && TYPE_GROUPS[type] ? type : undefined;
   const allowedTypes = activeType ? TYPE_GROUPS[activeType] : undefined;
@@ -33,8 +34,9 @@ export default async function SearchPage({
     return (
       <MusicBrowser
         releases={releases}
-        artists={artists.map(({ id, name, slug }) => ({ id, name, slug }))}
+        artists={artists.map(({ id, name, slug, genre, genreTags }) => ({ id, name, slug, genre, genreTags }))}
         initialQuery={q ?? ""}
+        initialGenre={genre && GENRES.some((g) => g.slug === genre) ? genre : null}
       />
     );
   }
