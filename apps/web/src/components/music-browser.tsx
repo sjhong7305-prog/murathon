@@ -334,7 +334,7 @@ function ReleasePanel({
               href={`/products/${release.id}`}
               className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-accent px-6 text-sm font-bold text-white transition hover:bg-accent-strong"
             >
-              앨범과 스토리 보기
+              Go to album
               <ArrowRight aria-hidden className="size-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
             <button
