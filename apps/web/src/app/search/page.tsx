@@ -1,6 +1,7 @@
-import { getAllArtists, getAllProducts } from "@/lib/data";
+import { getAllArtists, getAllProducts, getMusicCatalog } from "@/lib/data";
 import { ProductCard } from "@/components/product-card";
 import { ArtistCard } from "@/components/artist-card";
+import { MusicBrowser } from "@/components/music-browser";
 import { formatReleaseLabel } from "@muraton/shared/release-label";
 import type { ProductType } from "@muraton/shared/types";
 
@@ -25,6 +26,18 @@ export default async function SearchPage({
   const query = (q ?? "").trim().toLowerCase();
   const activeType = type && TYPE_GROUPS[type] ? type : undefined;
   const allowedTypes = activeType ? TYPE_GROUPS[activeType] : undefined;
+
+  // The music page is its own browse experience: music-only search + inline album accordions.
+  if (activeType === "music") {
+    const [artists, releases] = await Promise.all([getAllArtists(), getMusicCatalog()]);
+    return (
+      <MusicBrowser
+        releases={releases}
+        artists={artists.map(({ id, name, slug }) => ({ id, name, slug }))}
+        initialQuery={q ?? ""}
+      />
+    );
+  }
 
   const [artists, products] = await Promise.all([getAllArtists(), getAllProducts()]);
 

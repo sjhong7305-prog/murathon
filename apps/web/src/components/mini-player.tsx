@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   ChevronDown,
   Heart,
@@ -20,46 +19,10 @@ import {
 import { trackKey, usePlayer, usePlayerProgress } from "@/context/player-context";
 import { CoverArt } from "@/components/cover-art";
 import { formatDuration } from "@muraton/shared/format";
+import { useProductLike } from "@/lib/use-product-like";
 
 function clock(seconds: number) {
   return formatDuration(Math.floor(seconds));
-}
-
-/** The current release's like state, synced with /api/products/:id/like. */
-function useProductLike(productId: string | undefined) {
-  const router = useRouter();
-  const [liked, setLiked] = useState(false);
-
-  useEffect(() => {
-    if (!productId) return;
-    let cancelled = false;
-    fetch(`/api/products/${productId}/like`)
-      .then((res) => (res.ok ? res.json() : { liked: false }))
-      .then((data: { liked: boolean }) => !cancelled && setLiked(data.liked))
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [productId]);
-
-  const toggleLike = async () => {
-    if (!productId) return;
-    const nextLiked = !liked;
-    setLiked(nextLiked);
-    const res = await fetch(`/api/products/${productId}/like`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ liked: nextLiked }),
-    }).catch(() => null);
-    if (res?.status === 401) {
-      setLiked(false);
-      router.push("/login?message=" + encodeURIComponent("좋아요를 누르려면 로그인이 필요해요."));
-    } else if (!res?.ok) {
-      setLiked(!nextLiked);
-    }
-  };
-
-  return { liked, toggleLike };
 }
 
 /** Seek bar: a native range input (keyboard + screen reader support) laid over a custom track. */
@@ -156,7 +119,7 @@ function LikeButton({ productId, className = "" }: { productId: string; classNam
       type="button"
       onClick={toggleLike}
       aria-pressed={liked}
-      aria-label={liked ? "좋아요 취소" : "좋아요"}
+      aria-label={liked ? "위시리스트에서 빼기" : "위시리스트에 담기"}
       className={`grid size-11 shrink-0 place-items-center rounded-full transition hover:bg-ink/6 ${
         liked ? "text-orange" : "text-muted hover:text-ink"
       } ${className}`}
