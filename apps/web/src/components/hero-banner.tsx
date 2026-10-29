@@ -203,25 +203,28 @@ export function HeroBanner({ demo = false }: { demo?: boolean }) {
         />
 
         {current.label && (
-          <div
-            className={`absolute left-6 flex flex-col gap-1 sm:left-10 ${
-              heroSettings.position.startsWith("TOP") ? "bottom-6 sm:bottom-8" : "top-6 sm:top-8"
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <span className="rounded-full bg-accent px-3 py-1 text-xs font-bold text-ink">
-                {LABEL_TEXT[current.label] ?? current.label}
-              </span>
-              <span className="rounded-full bg-black/30 px-2.5 py-1 text-sm font-bold text-white backdrop-blur-sm">
-                {current.name}
-              </span>
-            </div>
-            {current.subtitle && (
-              <p className="rounded-full bg-black/20 px-2.5 py-1 text-xs text-white/90 backdrop-blur-sm">
-                {current.subtitle}
+          <>
+            {/* Neutral scrim under the credit so it reads on any photo (no chips, no blur). */}
+            <div
+              aria-hidden
+              className={`pointer-events-none absolute left-0 h-40 w-[28rem] max-w-full ${
+                heroSettings.position.startsWith("TOP")
+                  ? "bottom-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(0,0,0,0.5),transparent_70%)]"
+                  : "top-0 bg-[radial-gradient(ellipse_at_top_left,rgba(0,0,0,0.5),transparent_70%)]"
+              }`}
+            />
+            <div
+              className={`absolute left-6 sm:left-10 ${
+                heroSettings.position.startsWith("TOP") ? "bottom-6 sm:bottom-8" : "top-6 sm:top-8"
+              }`}
+            >
+              <p className="text-lg leading-tight font-bold text-white sm:text-xl">{current.name}</p>
+              <p className="mt-1 text-sm text-white/85">
+                <span className="font-semibold text-lime">{LABEL_TEXT[current.label] ?? current.label}</span>
+                {current.subtitle && <span> · {current.subtitle}</span>}
               </p>
-            )}
-          </div>
+            </div>
+          </>
         )}
 
         <div className={`absolute z-10 max-w-xl p-6 sm:p-10 ${positionStyle.wrapper}`}>
