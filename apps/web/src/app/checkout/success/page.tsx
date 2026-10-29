@@ -79,7 +79,7 @@ export default function CheckoutSuccessPage() {
         )}
         {order.listAsSupporter && primaryArtist && (
           <p className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-accent-strong">
-            🏆 곧 {primaryArtist.name}의{" "}
+            곧 {primaryArtist.name}의{" "}
             <Link href={`/artists/${primaryArtist.slug}#supporters`} className="underline">
               서포터 페이지
             </Link>
@@ -90,7 +90,7 @@ export default function CheckoutSuccessPage() {
 
       {unlockedSecrets.length > 0 && (
         <div className="mt-6 rounded-xl border border-amber-400/30 bg-amber-400/5 p-5 text-left">
-          <p className="mb-3 text-sm font-bold text-amber-700">🔓 시크릿 콘텐츠가 해금됐어요</p>
+          <p className="mb-3 text-sm font-bold text-ink">시크릿 콘텐츠가 열렸어요</p>
           <div className="flex flex-col gap-3">
             {unlockedSecrets.map(({ item, product }) => (
               <div key={item.productId} className="rounded-lg bg-cream p-3">

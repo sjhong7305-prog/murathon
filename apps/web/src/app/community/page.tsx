@@ -94,9 +94,9 @@ export default function CommunityPage() {
         <main className="min-w-0">
           <Link
             href="/community/new"
-            className="block rounded-2xl border border-line bg-surface px-4 py-3 text-sm text-muted transition hover:border-accent/40 hover:text-ink"
+            className="block rounded-2xl bg-surface px-5 py-4 text-sm text-muted transition-colors hover:bg-tone hover:text-ink"
           >
-            무슨 곡 듣고 있어요? 자유롭게 이야기해보세요 ✏️
+            무슨 곡 듣고 있어요? 자유롭게 이야기해보세요
           </Link>
 
           {activeTag && (

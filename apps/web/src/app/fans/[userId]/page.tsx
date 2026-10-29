@@ -1,3 +1,4 @@
+import { ListMusic, Lock } from "lucide-react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
@@ -51,8 +52,7 @@ export default async function FanCollectionPage({
           {profile.nickname.slice(0, 1)}
         </div>
         <div>
-          <p className="text-sm font-semibold text-accent-strong">🎧 팬 컬렉션</p>
-          <h1 className="text-2xl font-black text-ink">{profile.nickname}</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-ink">{profile.nickname}</h1>
           {profile.isOwner && <p className="text-sm text-muted">{profile.email}</p>}
           <p className="mt-0.5 text-xs text-muted">
             팔로워 {profile.followerCount} · 팔로잉 {profile.followingCount}
@@ -71,8 +71,8 @@ export default async function FanCollectionPage({
       </div>
 
       {profile.private ? (
-        <div className="mt-10 rounded-xl border border-line bg-surface p-10 text-center">
-          <p className="text-3xl">🔒</p>
+        <div className="mt-10 flex flex-col items-center rounded-2xl bg-surface p-10 text-center">
+          <Lock aria-hidden className="size-7 text-muted" />
           <p className="mt-2 text-sm font-bold text-ink">비공개 컬렉션이에요</p>
           <p className="mt-1 text-sm text-muted">{profile.nickname}님이 컬렉션을 비공개로 설정했어요.</p>
         </div>
@@ -221,10 +221,10 @@ export default async function FanCollectionPage({
                     <Link
                       key={p.id}
                       href={`/playlists/${p.id}`}
-                      className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-3 transition hover:border-accent/40"
+                      className="flex flex-col gap-2 rounded-2xl bg-surface p-3 transition-colors hover:bg-tone"
                     >
-                      <div className="flex aspect-square w-full items-center justify-center rounded-xl bg-gradient-to-br from-stone-700 to-stone-900 text-3xl text-white">
-                        🎵
+                      <div className="flex aspect-square w-full items-center justify-center rounded-xl bg-ink text-cream">
+                        <ListMusic aria-hidden className="size-8" />
                       </div>
                       <div>
                         <p className="truncate text-sm font-bold text-ink">{p.title}</p>

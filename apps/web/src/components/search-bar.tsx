@@ -22,7 +22,7 @@ export function SearchBar({ className = "" }: { className?: string }) {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="아티스트, 음원, 굿즈 검색"
-        className="w-full rounded-full border border-line bg-surface py-2 pl-9 pr-3 text-sm text-ink outline-none placeholder:text-muted transition focus:border-ink focus:shadow-[0_0_0_3px_rgba(184,255,90,0.55)]"
+        className="w-full rounded-full border border-transparent bg-tone py-2 pl-9 pr-3 text-sm text-ink outline-none placeholder:text-muted transition focus:border-ink focus:bg-surface focus:shadow-[0_0_0_3px_rgba(184,255,90,0.55)]"
       />
     </form>
   );

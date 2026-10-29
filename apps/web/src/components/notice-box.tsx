@@ -1,5 +1,6 @@
 "use client";
 
+import { Image as ImageIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { MoreHorizontal, Pin, Plus } from "lucide-react";
@@ -158,7 +159,7 @@ export function NoticeBox({
     return (
       <div className="flex flex-col items-center gap-3 rounded-xl border p-6 text-center" style={boxStyle}>
         <p className="text-sm font-bold" style={{ color: "var(--artist-card-text, var(--ink))" }}>
-          📢 첫 공지를 작성해보세요
+          첫 공지를 작성해보세요
         </p>
         <button
           type="button"
@@ -186,7 +187,7 @@ export function NoticeBox({
     <div className="rounded-xl border" style={boxStyle}>
       <div className="flex items-center gap-2 border-b px-4 py-3" style={{ borderColor: "color-mix(in srgb, var(--artist-text, var(--ink)) 12%, transparent)" }}>
         <p className="text-sm font-bold" style={{ color: "var(--artist-accent, var(--accent))" }}>
-          📢 공지
+          공지
         </p>
         {isOwner && (
           <button
@@ -217,7 +218,7 @@ export function NoticeBox({
             >
               {n.pinned && <Pin size={12} className="shrink-0" style={{ color: "var(--artist-accent, var(--accent))" }} />}
               <span className="truncate">{n.title}</span>
-              {n.hasImage && <span className="shrink-0">🖼️</span>}
+              {n.hasImage && <ImageIcon aria-label="이미지 포함" className="size-3.5 shrink-0 opacity-60" />}
               <span className="ml-auto shrink-0 pl-2 text-xs opacity-60">{formatRelativeTime(n.sentAt)}</span>
             </Link>
             {isOwner && (

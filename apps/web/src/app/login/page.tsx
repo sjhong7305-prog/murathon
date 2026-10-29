@@ -1,5 +1,6 @@
 "use client";
 
+import { Lock } from "lucide-react";
 import { Suspense, useActionState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -12,8 +13,9 @@ function LoginMessage() {
   const message = searchParams.get("message");
   if (!message) return null;
   return (
-    <p className="mt-4 rounded-lg border border-accent/30 bg-accent/5 px-3 py-2 text-sm font-semibold text-accent-strong">
-      🔒 {message}
+    <p className="mt-4 flex items-center gap-2 rounded-xl bg-lime/40 px-4 py-3 text-sm font-semibold text-ink">
+      <Lock aria-hidden className="size-4 shrink-0" />
+      {message}
     </p>
   );
 }
@@ -23,8 +25,7 @@ export default function LoginPage() {
 
   return (
     <div className="mx-auto max-w-md px-4 py-16">
-      <p className="text-sm font-semibold text-accent-strong">🎧 MU:RATHON Login</p>
-      <h1 className="mt-1 text-2xl font-black text-ink">로그인</h1>
+      <h1 className="text-3xl font-bold tracking-tight text-ink">로그인</h1>
       <Suspense fallback={null}>
         <LoginMessage />
       </Suspense>

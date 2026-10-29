@@ -69,8 +69,7 @@ export default async function FollowFeedPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
-      <p className="text-sm font-semibold text-accent-strong">👥 팔로우 피드</p>
-      <h1 className="mt-1 text-2xl font-black text-ink">내가 팔로우하는 팬들의 소식</h1>
+      <h1 className="text-3xl font-bold tracking-tight text-ink">내가 팔로우하는 팬들의 소식</h1>
 
       {followingIds.length === 0 ? (
         <div className="mt-10 rounded-xl border border-line bg-surface p-10 text-center">

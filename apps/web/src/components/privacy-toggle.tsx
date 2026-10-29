@@ -34,7 +34,7 @@ export function PrivacyToggle({ initialPrivacy }: { initialPrivacy: "PUBLIC" | "
             : "border-line text-ink"
         }`}
       >
-        {privacy === "PUBLIC" ? "🌐 내 컬렉션 공개" : "🔒 비공개"}
+        {privacy === "PUBLIC" ? "내 컬렉션 공개" : "비공개"}
       </button>
       <button
         type="button"

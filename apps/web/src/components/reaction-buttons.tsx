@@ -1,5 +1,6 @@
 "use client";
 
+import { HandHeart, Heart } from "lucide-react";
 import { useState } from "react";
 
 export function ReactionButtons({
@@ -35,24 +36,22 @@ export function ReactionButtons({
       <button
         type="button"
         onClick={toggleHeart}
-        className={`flex items-center rounded-full border font-semibold transition ${sizeClasses} ${
-          heartActive
-            ? "border-accent bg-accent/15"
-            : "border-line hover:border-black/20"
+        className={`flex items-center gap-1.5 rounded-full border font-semibold transition ${sizeClasses} ${
+          heartActive ? "border-transparent bg-orange/15" : "border-transparent bg-tone hover:bg-line"
         }`}
       >
-        ❤️ <span className="text-ink">{heart}</span>
+        <Heart aria-hidden className={`size-4 ${heartActive ? "fill-orange text-orange" : "text-muted"}`} />
+        <span className="text-ink tabular-nums">{heart}</span>
       </button>
       <button
         type="button"
         onClick={togglePray}
-        className={`flex items-center rounded-full border font-semibold transition ${sizeClasses} ${
-          prayActive
-            ? "border-amber-500 bg-amber-400/15"
-            : "border-line hover:border-black/20"
+        className={`flex items-center gap-1.5 rounded-full border font-semibold transition ${sizeClasses} ${
+          prayActive ? "border-transparent bg-lime/50" : "border-transparent bg-tone hover:bg-line"
         }`}
       >
-        🙏 <span className="text-ink">{pray}</span>
+        <HandHeart aria-hidden className={`size-4 ${prayActive ? "text-ink" : "text-muted"}`} />
+        <span className="text-ink tabular-nums">{pray}</span>
       </button>
     </div>
   );

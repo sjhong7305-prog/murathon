@@ -2,6 +2,7 @@
 
 import { Suspense } from "react";
 import Link from "next/link";
+import { ChevronDown } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
 
 const CATEGORIES = [
@@ -27,7 +28,7 @@ function CategoryNavInner() {
   if (isMusicPage) return null;
 
   return (
-    <div className="border-t border-line">
+    <div>
       <div className="mx-auto max-w-7xl px-4">
         <nav className="scrollbar-hide flex items-center gap-6 overflow-x-auto overscroll-x-contain text-base font-semibold text-muted md:overflow-visible">
           {CATEGORIES.map((c) => (
@@ -39,12 +40,10 @@ function CategoryNavInner() {
           <div className="group relative shrink-0">
             <Link href="/artists" className="flex items-center gap-1 py-3 transition hover:text-ink">
               아티스트
-              <span aria-hidden className="text-[10px]">
-                ▾
-              </span>
+              <ChevronDown aria-hidden className="size-3.5" />
             </Link>
 
-            <div className="invisible absolute left-0 top-full z-30 min-w-56 -translate-y-1 rounded-lg border border-line bg-surface py-2 opacity-0 shadow-lg transition duration-150 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
+            <div className="invisible absolute left-0 top-full z-30 min-w-56 origin-top-left -translate-y-1 scale-[0.97] rounded-xl bg-surface py-2 opacity-0 shadow-[0_16px_40px_rgba(28,27,24,0.14)] transition duration-150 ease-[var(--ease-out)] group-hover:visible group-hover:translate-y-0 group-hover:scale-100 group-hover:opacity-100">
               {ARTIST_LINKS.map((a) => (
                 <Link
                   key={a.href}

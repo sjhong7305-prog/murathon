@@ -38,7 +38,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <PlayerProvider>
               <Header />
               <main className="flex-1 pb-28">{children}</main>
-              <footer className="border-t border-line">
+              <footer className="mt-12 bg-tone">
                 <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-10 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="text-sm font-black tracking-tight text-ink">MU:RATHON</p>

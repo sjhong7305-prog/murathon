@@ -48,7 +48,7 @@ export function FollowArtistButton({ artistId }: { artistId: string }) {
           : "bg-accent text-white shadow-sm hover:bg-accent-strong"
       }`}
     >
-      {following ? "팔로잉 ✓" : "+ 팔로우"}
+      {following ? "팔로잉" : "팔로우"}
     </button>
   );
 }

@@ -115,18 +115,16 @@ export function LiveSupportTicker({
   return (
     <section
       aria-label={isLive ? "방금 응원받은 음악" : "막 공개된 음악"}
-      className="relative flex items-stretch overflow-hidden border-y border-line"
+      className="relative flex items-stretch overflow-hidden rounded-2xl bg-surface"
     >
-      <div className="relative z-10 flex shrink-0 items-center gap-2 border-r border-line bg-cream py-3 pr-4 pl-1 sm:pr-5">
+      <div className="relative z-10 flex shrink-0 items-center gap-2.5 bg-tone py-3 pr-4 pl-4 sm:pr-5">
         <span aria-hidden className="relative flex size-2.5">
           {isLive && <span className="live-dot absolute inset-0 rounded-full bg-lime" />}
           <span className={`relative size-2.5 rounded-full ${isLive ? "bg-lime ring-1 ring-ink/20" : "bg-ink"}`} />
         </span>
-        <p className="text-[11px] leading-tight font-black tracking-[0.14em] text-ink">
-          {isLive ? "LIVE" : "NEW"}
-          <span className="hidden font-bold tracking-normal text-muted sm:block">
-            {isLive ? "방금 응원받은 음악" : "막 공개된 음악"}
-          </span>
+        <p className="text-sm font-bold whitespace-nowrap text-ink">
+          <span className="sm:hidden">{isLive ? "실시간" : "신곡"}</span>
+          <span className="hidden sm:inline">{isLive ? "방금 응원받은 음악" : "막 공개된 음악"}</span>
         </p>
       </div>
 
@@ -191,9 +189,7 @@ function TickerEntry({ item, now, fresh }: { item: TickerItem; now: number; fres
           </>
         ) : (
           <>
-            <span className="mr-1.5 rounded-sm bg-ink px-1 py-px text-[10px] font-black tracking-wider text-cream">
-              NEW RELEASE
-            </span>
+            <span className="mr-1.5 rounded-full bg-lime px-1.5 py-px text-[11px] font-bold text-ink">신곡</span>
             <span className="font-semibold text-ink">{track.title}</span>
             <span className="ml-1.5 text-[11px]">{track.artistName}</span>
           </>

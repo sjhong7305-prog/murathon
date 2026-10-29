@@ -173,8 +173,7 @@ export function PlaylistDetail({ playlist }: { playlist: PlaylistData }) {
         </div>
       ) : (
         <>
-          <p className="text-sm font-semibold text-accent-strong">🎵 플레이리스트</p>
-          <div className="mt-1 flex flex-wrap items-start justify-between gap-2">
+          <div className="flex flex-wrap items-start justify-between gap-2">
             <h1 className="text-2xl font-black text-ink">{title}</h1>
             {playlist.isOwner && (
               <span className="rounded-full bg-cream px-2.5 py-1 text-xs font-bold text-muted">
@@ -199,9 +198,9 @@ export function PlaylistDetail({ playlist }: { playlist: PlaylistData }) {
         <button
           type="button"
           onClick={handleCopyLink}
-          className="rounded-full border border-line px-5 py-2.5 text-sm font-bold text-ink transition hover:border-black/30"
+          className="rounded-full bg-tone px-5 py-2.5 text-sm font-bold text-ink transition-colors hover:bg-line"
         >
-          {copied ? "복사됨 ✓" : "🔗 링크 복사"}
+          {copied ? "복사됨" : "링크 복사"}
         </button>
         {playlist.isOwner && !editing && (
           <>

@@ -63,7 +63,7 @@ export function ProductCard({
                 {formatWon(product.suggestedPrice)}
               </span>{" "}
               <span
-                className={`font-bold ${theme ? "" : "text-accent-strong"}`}
+                className={`font-bold whitespace-nowrap ${theme ? "" : "text-accent-strong"}`}
                 style={theme ? { color: theme.accent } : undefined}
               >
                 (자율 가격, 0원부터)

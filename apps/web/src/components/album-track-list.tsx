@@ -39,7 +39,7 @@ export function TrackRows({ product, artist }: { product: Product; artist: Artis
   const currentKey = current ? trackKey(current) : null;
 
   return (
-    <ol className="overflow-hidden rounded-2xl border border-line bg-surface">
+    <ol className="overflow-hidden rounded-2xl bg-surface">
       {tracks.map((track, i) => {
         const isCurrent = currentKey === trackKey(track);
         const isPlaying = isCurrent && playing;

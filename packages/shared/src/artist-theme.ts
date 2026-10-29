@@ -76,11 +76,11 @@ export const DEFAULT_THEME: ArtistTheme = {
   font: "pretendard",
   discographyLayout: "grid",
   colors: {
-    accent: "#8b75d7",
-    text: "#2a2a2a",
-    link: "#6b4fa8",
+    accent: "#1c1b18",
+    text: "#1c1b18",
+    link: "#44610f",
     card: "#ffffff",
-    background: "#f9f9f7",
+    background: "#f7f6f2",
   },
   background: { type: "solid" },
   links: [],
@@ -431,5 +431,24 @@ export function parseArtistTheme(raw: unknown): ArtistTheme {
     imageUrl: typeof bgObj.imageUrl === "string" ? bgObj.imageUrl : undefined,
     computedMeanColor: typeof bgObj.computedMeanColor === "string" ? bgObj.computedMeanColor : undefined,
   });
-  return result.ok ? result.theme : DEFAULT_THEME;
+  if (!result.ok) return DEFAULT_THEME;
+  return isLegacyDefaultColors(result.theme.colors) ? { ...result.theme, colors: DEFAULT_THEME.colors } : result.theme;
+}
+
+/**
+ * The "베이직" preset's colours before the site moved off purple. A saved theme still carrying
+ * exactly these was never customised, so it follows the current default instead.
+ */
+const LEGACY_DEFAULT_COLORS: ArtistTheme["colors"] = {
+  accent: "#8b75d7",
+  text: "#2a2a2a",
+  link: "#6b4fa8",
+  card: "#ffffff",
+  background: "#f9f9f7",
+};
+
+function isLegacyDefaultColors(colors: ArtistTheme["colors"]) {
+  return (Object.keys(LEGACY_DEFAULT_COLORS) as (keyof ArtistTheme["colors"])[]).every(
+    (key) => colors[key]?.toLowerCase() === LEGACY_DEFAULT_COLORS[key]
+  );
 }

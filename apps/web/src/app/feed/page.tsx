@@ -19,8 +19,7 @@ export default async function FollowedArtistsFeedPage() {
   return (
     <div className="mx-auto w-full max-w-[720px] px-4 py-6 sm:px-0">
       <div>
-        <p className="text-sm font-semibold text-accent-strong">🎧 피드</p>
-        <h1 className="mt-1 text-2xl font-black text-ink">팔로우한 아티스트 소식</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-ink">팔로우한 아티스트 소식</h1>
       </div>
       <div className="mt-6">
         <FeedInfiniteList

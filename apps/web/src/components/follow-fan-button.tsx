@@ -43,7 +43,7 @@ export function FollowFanButton({
           : "border border-accent/40 bg-accent/10 text-accent-strong hover:bg-accent/20"
       }`}
     >
-      {following ? "팔로잉 ✓" : "+ 팔로우"}
+      {following ? "팔로잉" : "팔로우"}
     </button>
   );
 }

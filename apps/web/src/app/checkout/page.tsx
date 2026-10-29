@@ -160,9 +160,9 @@ export default function CheckoutPage({ searchParams }: PageProps<"/checkout">) {
           </div>
 
           {primaryArtist?.checkoutQuestion && (
-            <div className="rounded-lg border border-accent/30 bg-accent/5 p-3">
+            <div className="rounded-xl bg-lime/30 p-4">
               <p className="text-sm font-bold text-accent-strong">
-                💬 {primaryArtist.name}의 질문
+                {primaryArtist.name}의 질문
               </p>
               <p className="mt-0.5 text-sm text-ink">{primaryArtist.checkoutQuestion}</p>
               <input
@@ -182,7 +182,7 @@ export default function CheckoutPage({ searchParams }: PageProps<"/checkout">) {
               className="mt-0.5 h-4 w-4 accent-accent"
             />
             <span>
-              🏆 내 닉네임을 {primaryArtist ? `${primaryArtist.name}의 ` : ""}
+              내 닉네임을 {primaryArtist ? `${primaryArtist.name}의 ` : ""}
               서포터 페이지(디지털 명예의 전당)에 남길게요
             </span>
           </label>
@@ -225,7 +225,7 @@ export default function CheckoutPage({ searchParams }: PageProps<"/checkout">) {
                 <div key={item.productId} className="flex justify-between text-sm">
                   <span className="text-ink">
                     {product?.title} {item.quantity > 1 ? `x${item.quantity}` : ""}
-                    {product?.secretContent ? " 🔒" : ""}
+                    {product?.secretContent ? " · 시크릿" : ""}
                   </span>
                   <span className="text-muted">{formatWon(item.price * item.quantity)}</span>
                 </div>

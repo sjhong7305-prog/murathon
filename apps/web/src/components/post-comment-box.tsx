@@ -123,9 +123,9 @@ export function PostCommentBox({
         <button
           type="button"
           onClick={() => (isLoggedIn ? null : router.push("/login"))}
-          className="mt-2.5 w-full cursor-default rounded-lg border border-dashed border-line bg-cream px-3 py-2 text-left text-xs text-muted"
+          className="mt-2.5 w-full cursor-default rounded-lg bg-tone px-3 py-2 text-left text-xs text-muted"
         >
-          🔒 팔로우하고 0원이라도 후원하면 대화에 참여할 수 있어요!
+          팔로우하고 0원이라도 후원하면 대화에 참여할 수 있어요
         </button>
       )}
     </div>

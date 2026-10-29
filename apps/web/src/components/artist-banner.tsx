@@ -22,7 +22,11 @@ export function ArtistBanner({
   const accent = theme.colors.accent;
 
   return (
-    <div className="relative h-[200px] w-full overflow-hidden sm:h-[240px] lg:h-[320px] xl:h-[400px]">
+    <div
+      className={`relative w-full overflow-hidden ${
+        artist.bannerImage ? "h-[200px] sm:h-[240px] lg:h-[320px] xl:h-[400px]" : "h-[180px] sm:h-[200px] lg:h-[220px]"
+      }`}
+    >
       {artist.bannerImage ? (
         preview ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -31,16 +35,14 @@ export function ArtistBanner({
           <Image src={artist.bannerImage} alt="" fill priority sizes="100vw" className="object-cover" />
         )
       ) : (
-        <div
-          className="h-full w-full"
-          style={{
-            backgroundImage: `linear-gradient(135deg, ${accent} 0%, color-mix(in srgb, ${accent} 55%, black) 100%)`,
-          }}
-        />
+        // No banner photo: a flat field of the artist's accent (darkened so white text always reads).
+        <div className="h-full w-full" style={{ backgroundColor: `color-mix(in srgb, ${accent} 70%, black)` }} />
       )}
 
-      {/* Fixed dark-from-bottom gradient for text legibility — independent of the artist's theme, since it always sits over a photo/gradient rather than the themed page background. */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent" />
+      {/* Dark-from-bottom scrim for text legibility over a photo — independent of the artist's theme. */}
+      {artist.bannerImage && (
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent" />
+      )}
 
       <div className="absolute inset-x-0 bottom-0">
         <div className="mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-3 px-4 pb-4 sm:pb-6">
@@ -58,13 +60,10 @@ export function ArtistBanner({
               )}
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-semibold text-white/80 sm:text-sm">
-                {artist.genre} · {artist.location}
+              <h1 className="truncate text-2xl font-bold text-white sm:text-3xl lg:text-4xl">{artist.name}</h1>
+              <p className="mt-1 text-xs text-white/80 sm:text-sm">
+                {[artist.genre, artist.location, `팔로워 ${followerCount.toLocaleString("ko-KR")}명`].filter(Boolean).join(" · ")}
               </p>
-              <h1 className="mt-0.5 truncate text-2xl font-bold text-white drop-shadow sm:text-3xl lg:text-4xl">
-                {artist.name}
-              </h1>
-              <p className="mt-0.5 text-xs text-white/70 sm:text-sm">팔로워 {followerCount.toLocaleString("ko-KR")}명</p>
             </div>
           </div>
           <FollowArtistButton artistId={artist.id} />

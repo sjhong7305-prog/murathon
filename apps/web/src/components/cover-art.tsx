@@ -1,16 +1,13 @@
 import Image from "next/image";
+import { Disc3, Lock } from "lucide-react";
 
-const TYPE_LABEL: Record<string, string> = {
-  album: "ALBUM",
-  track: "TRACK",
-  merch: "MERCH",
-  ticket: "TICKET",
-};
-
+/**
+ * Square cover. With an image it is just the image: the title, type and price always sit next to
+ * or below it, so nothing is printed on top. Without one it is a flat tone with a quiet disc mark
+ * instead of a gradient placeholder.
+ */
 export function CoverArt({
-  gradient,
   label,
-  type,
   imageUrl,
   className = "",
   sizes = "(max-width: 640px) 50vw, 320px",
@@ -20,8 +17,10 @@ export function CoverArt({
   hasSecret = false,
   initial,
 }: {
+  /** Legacy gradient classes from the data; no longer painted (flat covers only). */
   gradient: string;
   label: string;
+  /** Kept for callers; the release type is shown in the text beside the cover, not on it. */
   type?: string;
   imageUrl?: string;
   className?: string;
@@ -30,45 +29,26 @@ export function CoverArt({
   rounded?: string;
   hideLabel?: boolean;
   hasSecret?: boolean;
-  /** Shown centered over the gradient when there's no imageUrl — e.g. an artist's initial. */
+  /** Shown centered when there's no imageUrl — e.g. an artist's initial. */
   initial?: string;
 }) {
   return (
     <div
-      className={`relative flex aspect-square w-full items-end overflow-hidden ${rounded} bg-gradient-to-br ${gradient} ${className}`}
+      className={`relative flex aspect-square w-full overflow-hidden bg-tone ${rounded} ${className}`}
     >
       {imageUrl ? (
-        <Image
-          src={imageUrl}
-          alt={label}
-          fill
-          sizes={sizes}
-          priority={priority}
-          className="object-cover"
-        />
-      ) : (
-        initial && (
-          <span className="absolute inset-0 flex items-center justify-center text-2xl font-black text-white/85">
-            {initial}
-          </span>
-        )
-      )}
-      {!hideLabel && (
-        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
-      )}
-      {!hideLabel && type && (
-        <span className="absolute top-3 left-3 z-10 rounded-full bg-black/30 px-2 py-1 text-[10px] font-semibold tracking-wider text-white backdrop-blur-sm">
-          {TYPE_LABEL[type] ?? type.toUpperCase()}
+        <Image src={imageUrl} alt={label} fill sizes={sizes} priority={priority} className="object-cover" />
+      ) : initial ? (
+        <span className="absolute inset-0 flex items-center justify-center text-[2.5em] font-bold text-ink/35">
+          {initial}
         </span>
+      ) : (
+        <Disc3 aria-hidden strokeWidth={1.25} className="m-auto size-[34%] text-ink/20" />
       )}
       {!hideLabel && hasSecret && (
-        <span className="absolute top-3 right-3 z-10 rounded-full bg-amber-400/90 px-2 py-1 text-[10px] font-bold tracking-wide text-black shadow">
-          🔒 시크릿
-        </span>
-      )}
-      {!hideLabel && (
-        <span className="relative z-10 w-full p-3 text-sm font-bold leading-tight text-white drop-shadow-sm">
-          {label}
+        <span className="absolute top-2.5 right-2.5 z-10 inline-flex items-center gap-1 rounded-full bg-ink px-2 py-1 text-[11px] font-bold text-cream">
+          <Lock aria-hidden className="size-3" />
+          시크릿
         </span>
       )}
     </div>

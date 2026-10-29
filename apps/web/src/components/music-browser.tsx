@@ -144,7 +144,7 @@ export function MusicBrowser({
           onChange={(e) => updateQuery(e.target.value)}
           placeholder="듣고 싶은 음원이나 아티스트를 검색해보세요"
           autoComplete="off"
-          className={`h-14 w-full rounded-full border border-line bg-surface pl-13 text-[15px] text-ink sm:text-base ${query ? "pr-14" : "pr-5"} shadow-[0_8px_30px_rgba(28,27,24,0.06)] transition outline-none placeholder:text-muted focus:border-ink focus:shadow-[0_0_0_4px_rgba(184,255,90,0.55)] [&::-webkit-search-cancel-button]:hidden`}
+          className={`h-14 w-full rounded-full border border-line bg-surface pl-13 text-[15px] text-ink sm:text-base ${query ? "pr-14" : "pr-5"} transition outline-none placeholder:text-muted focus:border-ink focus:shadow-[0_0_0_4px_rgba(184,255,90,0.55)] [&::-webkit-search-cancel-button]:hidden`}
         />
         {query && (
           <button
@@ -171,7 +171,7 @@ export function MusicBrowser({
                   className={`min-h-10 rounded-full border px-4 text-sm font-semibold transition ${
                     active
                       ? "border-ink bg-ink text-cream"
-                      : "border-line bg-surface text-ink hover:border-ink/40 hover:bg-lime/30"
+                      : "border-transparent bg-surface text-ink hover:bg-lime/40"
                   }`}
                 >
                   {g.label}
@@ -341,7 +341,7 @@ function MusicCard({
           {isPwyw ? (
             <>
               <span className="font-semibold text-ink tabular-nums">{formatWon(release.suggestedPrice)}</span>{" "}
-              <span className="font-bold text-accent-strong">(자율 가격, 0원부터)</span>
+              <span className="font-bold whitespace-nowrap text-accent-strong">(자율 가격, 0원부터)</span>
             </>
           ) : (
             <span className="font-semibold text-accent-strong tabular-nums">{formatWon(release.suggestedPrice)}부터</span>
@@ -382,22 +382,23 @@ function ReleasePanel({
       ref={panelRef}
       id={`music-panel-${release.id}`}
       aria-labelledby={headingId}
-      className="music-panel relative mt-2 mb-4 rounded-3xl bg-surface shadow-[0_0_0_1px_var(--line),0_20px_50px_rgba(28,27,24,0.08)]"
+      className="music-panel relative mt-2 mb-4 rounded-3xl bg-surface"
     >
       <span
         aria-hidden
-        className="absolute -top-2 size-4 -translate-x-1/2 rotate-45 rounded-tl-sm bg-surface shadow-[-1px_-1px_0_var(--line)]"
+        className="absolute -top-2 size-4 -translate-x-1/2 rotate-45 rounded-tl-sm bg-surface"
         style={{ left: `${caretPercent}%` }}
       />
       <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-10">
         <div className="flex min-w-0 flex-col">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-xs font-bold tracking-[0.16em] text-muted">{formatReleaseLabel(release).toUpperCase()}</p>
-              <h2 id={headingId} className="mt-1.5 text-2xl leading-tight font-bold tracking-tight text-ink sm:text-3xl">
+              <h2 id={headingId} className="text-2xl leading-tight font-bold tracking-tight text-ink sm:text-3xl">
                 {release.title}
               </h2>
-              <p className="mt-1 text-base font-semibold text-ink/80">{artist.name}</p>
+              <p className="mt-1 text-base font-semibold text-ink/80">
+                {artist.name} <span className="font-normal text-muted">· {formatReleaseLabel(release)}</span>
+              </p>
             </div>
             <button
               type="button"
@@ -444,7 +445,7 @@ function ReleasePanel({
               onClick={toggleLike}
               aria-pressed={liked}
               className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-full border px-5 text-sm font-bold transition ${
-                liked ? "border-orange/60 bg-orange/10 text-ink" : "border-line text-ink hover:border-ink/30"
+                liked ? "border-transparent bg-orange/15 text-ink" : "border-transparent bg-tone text-ink hover:bg-line"
               }`}
             >
               <Heart aria-hidden className={`size-4 ${liked ? "fill-orange text-orange" : ""}`} />

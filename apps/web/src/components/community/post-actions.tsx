@@ -1,5 +1,6 @@
 "use client";
 
+import { Link2, MessageCircle } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
 
@@ -62,7 +63,8 @@ export function PostActions({ postId, commentCount }: { postId: string; commentC
         href={`/community/${postId}`}
         className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 font-semibold text-muted transition hover:border-black/20 hover:text-ink"
       >
-        💬 {commentCount}
+        <MessageCircle aria-hidden className="size-4" />
+        {commentCount}
       </Link>
 
       <button
@@ -70,7 +72,8 @@ export function PostActions({ postId, commentCount }: { postId: string; commentC
         onClick={handleShare}
         className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 font-semibold text-muted transition hover:border-black/20 hover:text-ink"
       >
-        {copied ? "링크 복사됨 ✓" : "🔗 공유"}
+        <Link2 aria-hidden className="size-4" />
+        {copied ? "링크 복사됨" : "공유"}
       </button>
     </div>
   );

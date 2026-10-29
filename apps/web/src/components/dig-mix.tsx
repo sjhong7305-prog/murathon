@@ -82,8 +82,7 @@ export function DigMix({ candidates }: { candidates: HomeTrack[] }) {
       <div className="overflow-hidden rounded-3xl bg-ink text-cream">
         <div className="grid gap-10 p-6 sm:p-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-center lg:gap-6 lg:p-14">
           <div>
-            <p className="text-[11px] font-black tracking-[0.2em] text-lime">MU:RATHON MIX</p>
-            <h2 id="dig-mix-title" className="mt-3 text-4xl leading-none font-black tracking-tight sm:text-5xl">
+            <h2 id="dig-mix-title" className="text-4xl leading-tight font-bold tracking-tight sm:text-5xl">
               Dig in 30s
             </h2>
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-cream/65 sm:text-base">
