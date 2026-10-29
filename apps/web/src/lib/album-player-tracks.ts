@@ -6,7 +6,7 @@ import type { PlayerTrack } from "@/context/player-context";
  * the single track itself. Album tracks share the album's productId, so likes and purchase links
  * from the player point at the album.
  */
-export function albumPlayerTracks(product: Product, artist: Artist): PlayerTrack[] {
+export function albumPlayerTracks(product: Product, artist: Pick<Artist, "name" | "slug">): PlayerTrack[] {
   const base = {
     productId: product.id,
     artistName: artist.name,

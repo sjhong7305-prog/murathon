@@ -155,6 +155,21 @@ body {
   }
 }
 
+/* "Now playing" equalizer bars on music list covers (src/components/music-browser.tsx). */
+.eq-bar {
+  transform-origin: bottom;
+  animation: eq-bar 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes eq-bar {
+  from {
+    transform: scaleY(0.25);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
 /* Dig in 30s cover fan: the playing cover lifts forward. */
 .dig-cover {
   transition: transform 300ms ease, box-shadow 300ms ease;
@@ -179,7 +194,8 @@ body {
     transition: none;
   }
 
-  .player-sheet {
+  .player-sheet,
+  .eq-bar {
     animation: none;
   }
 }

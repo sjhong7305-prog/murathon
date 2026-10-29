@@ -41,6 +41,7 @@ async function fetchAlbumTracks(productId: string): Promise<AlbumTrack[]> {
     title: t.title,
     durationSec: t.durationSec,
     isTitle: t.isTitle,
+    hasPreview: Boolean(t.previewUrl),
   }));
 }
 
@@ -205,6 +206,33 @@ export async function getProductsByArtist(
     orderBy: { createdAt: "asc" },
   });
   return rows.map((r) => toProduct(r));
+}
+
+/** Published albums and tracks with their tracklists, for the music browse page. Newest release first. */
+export async function getMusicCatalog(): Promise<Product[]> {
+  const rows = await prisma.product.findMany({
+    where: { status: "PUBLISHED", type: { in: ["ALBUM", "TRACK"] } },
+    include: PRODUCT_INCLUDE,
+    orderBy: [{ releaseDate: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
+  });
+  const trackRows = await prisma.albumTrack.findMany({
+    where: { productId: { in: rows.map((r) => r.id) } },
+    orderBy: { trackNumber: "asc" },
+  });
+  const tracksByProduct = new Map<string, AlbumTrack[]>();
+  for (const t of trackRows) {
+    const list = tracksByProduct.get(t.productId) ?? [];
+    list.push({
+      id: t.id,
+      trackNumber: t.trackNumber,
+      title: t.title,
+      durationSec: t.durationSec,
+      isTitle: t.isTitle,
+      hasPreview: Boolean(t.previewUrl),
+    });
+    tracksByProduct.set(t.productId, list);
+  }
+  return rows.map((r) => toProduct(r, tracksByProduct.get(r.id) ?? []));
 }
 
 export async function getProductById(id: string): Promise<Product | undefined> {

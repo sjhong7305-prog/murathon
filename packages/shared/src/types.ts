@@ -65,6 +65,8 @@ export interface AlbumTrack {
   title: string;
   durationSec: number;
   isTitle: boolean;
+  /** Whether this track has its own preview audio (playback otherwise falls back to the album's). */
+  hasPreview?: boolean;
 }
 
 export interface Product {
