@@ -38,7 +38,7 @@ export function NewArtistCard({ artist, track }: { artist: Artist; track?: Produ
       className="group block rounded-xl p-3 transition-colors hover:bg-surface focus-visible:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
     >
       <div className="relative">
-        <div className="relative aspect-square overflow-hidden rounded-full bg-line shadow-[0_8px_24px_rgba(20,20,18,0.12)]">
+        <div className="relative aspect-square overflow-hidden rounded-full bg-tone">
           {artist.imageUrl ? (
             <Image
               src={artist.imageUrl}

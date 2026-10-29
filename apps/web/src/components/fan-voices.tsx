@@ -37,7 +37,7 @@ function FanVoiceCard({ voice, tone }: { voice: FanVoice; tone: string }) {
   return (
     <Link
       href={`/products/${voice.productId}`}
-      className={`group flex h-full flex-col rounded-2xl border border-line p-5 transition hover:-translate-y-0.5 hover:border-ink/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink sm:p-6 ${tone}`}
+      className={`group flex h-full flex-col rounded-2xl p-5 transition-transform duration-200 ease-[var(--ease-out)] hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink sm:p-6 ${tone}`}
     >
       <Quote aria-hidden className="size-6 fill-ink text-ink" />
       <blockquote className="mt-3 text-base leading-relaxed font-semibold text-ink [word-break:keep-all] sm:text-[17px]">
@@ -53,7 +53,7 @@ function FanVoiceCard({ voice, tone }: { voice: FanVoice; tone: string }) {
         )}
       </div>
 
-      <div className="mt-5 flex items-center gap-3 border-t border-ink/10 pt-4">
+      <div className="mt-5 flex items-center gap-3 pt-1">
         <CoverThumb imageUrl={voice.imageUrl} coverColor={voice.coverColor} sizes="40px" className="size-10 shrink-0 rounded-md" />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-bold text-ink group-hover:underline">{voice.title}</p>

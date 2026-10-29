@@ -106,7 +106,7 @@ export default async function Home() {
       <section className="mt-20 sm:mt-24">
         <SectionHeader title="Popular Last Week" subtitle="저번주 가장 많이 응원받은 앨범" />
         {lastWeekPopularAlbums.length > 0 ? (
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-6">
+          <div className="-mx-3 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-6">
             {lastWeekPopularAlbums.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
@@ -128,7 +128,7 @@ export default async function Home() {
       {upcomingShows.length > 0 && (
         <section className="mt-16 sm:mt-20">
           <SectionHeader title="Upcoming Shows" subtitle="직접 만나서 응원하세요" />
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-6">
+          <div className="-mx-3 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-6">
             {upcomingShows.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
@@ -136,14 +136,14 @@ export default async function Home() {
         </section>
       )}
 
-      <section className="mt-16 rounded-2xl border border-line bg-surface p-6 sm:mt-20 sm:p-8">
+      <section className="mt-16 rounded-3xl bg-surface p-6 sm:mt-20 sm:p-10">
         <SectionHeader title="Find by Genre" subtitle="좋아하는 장르에서 시작하기" />
         <div className="mt-1 flex flex-wrap gap-2">
           {GENRES.map((g) => (
             <Link
               key={g.slug}
               href={`/artists?genre=${g.slug}`}
-              className="rounded-full border border-line bg-cream px-4 py-2 text-sm font-semibold text-ink transition hover:border-ink hover:bg-lime hover:text-ink"
+              className="inline-flex min-h-10 items-center rounded-full bg-tone px-4 text-sm font-semibold text-ink transition-colors hover:bg-lime"
             >
               {g.label}
             </Link>

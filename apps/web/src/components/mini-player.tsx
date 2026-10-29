@@ -263,7 +263,7 @@ function MobilePlayerSheet({ onClose }: { onClose: () => void }) {
         >
           <ChevronDown aria-hidden className="size-6" />
         </button>
-        <p className="text-xs font-bold tracking-[0.14em] text-muted">NOW PLAYING</p>
+        <span aria-hidden />
         <button
           type="button"
           onClick={() => setShowQueue((v) => !v)}
@@ -284,7 +284,7 @@ function MobilePlayerSheet({ onClose }: { onClose: () => void }) {
         </div>
       ) : (
         <div className="flex min-h-0 flex-1 items-center justify-center py-6">
-          <div className="aspect-square w-full max-w-[min(100%,46dvh)] overflow-hidden rounded-3xl shadow-[0_24px_60px_rgba(28,27,24,0.28)]">
+          <div className="aspect-square w-full max-w-[min(100%,46dvh)] overflow-hidden rounded-3xl">
             <CoverArt
               gradient={current.coverColor}
               label={current.title}
@@ -354,7 +354,7 @@ export function MiniPlayer() {
 
   return (
     <>
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/90 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_30px_rgba(28,27,24,0.06)] backdrop-blur-xl">
+      <div className="fixed inset-x-0 bottom-0 z-40 bg-surface pb-[env(safe-area-inset-bottom)] shadow-[0_-10px_30px_rgba(28,27,24,0.08)]">
         {/* Mobile: slim bar. Tapping anywhere but the play button opens the full-screen player. */}
         <div className="md:hidden">
           <div className="pointer-events-none absolute inset-x-0 top-0">
@@ -443,7 +443,7 @@ export function MiniPlayer() {
             </button>
 
             {queueOpen && (
-              <div className="absolute right-0 bottom-full mb-3 w-96 rounded-2xl border border-line bg-surface p-3 shadow-[0_20px_50px_rgba(28,27,24,0.16)]">
+              <div className="absolute right-0 bottom-full mb-3 w-96 rounded-2xl bg-surface p-3 shadow-[0_20px_50px_rgba(28,27,24,0.16)]">
                 <p className="mb-1 px-2 text-sm font-bold text-ink">재생 목록</p>
                 <div className="max-h-[50dvh] overflow-y-auto">
                   <QueueList />

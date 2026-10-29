@@ -12,8 +12,8 @@ export function RightRail({
 }) {
   return (
     <div className="flex flex-col gap-5">
-      <div className="rounded-2xl border border-line bg-surface p-4">
-        <p className="text-sm font-bold text-ink">🔥 Hot Debates</p>
+      <div className="rounded-2xl bg-surface p-5">
+        <p className="text-sm font-bold text-ink">Hot Debates</p>
         {hotPosts.length === 0 ? (
           <p className="mt-2 text-xs text-muted">아직 댓글이 달린 글이 없어요.</p>
         ) : (
@@ -24,7 +24,7 @@ export function RightRail({
                   <p className="truncate text-sm font-semibold text-ink group-hover:text-accent-strong">
                     {post.title}
                   </p>
-                  <p className="text-xs text-muted">💬 댓글 {commentCount}개</p>
+                  <p className="text-xs text-muted">댓글 {commentCount}개</p>
                 </Link>
               </li>
             ))}
@@ -32,8 +32,8 @@ export function RightRail({
         )}
       </div>
 
-      <div className="rounded-2xl border border-line bg-surface p-4">
-        <p className="text-sm font-bold text-ink">🎧 지금 뜨는 트랙</p>
+      <div className="rounded-2xl bg-surface p-5">
+        <p className="text-sm font-bold text-ink">지금 뜨는 트랙</p>
         {trendingTracks.length === 0 ? (
           <p className="mt-2 text-xs text-muted">아직 등록된 트랙이 없어요.</p>
         ) : (

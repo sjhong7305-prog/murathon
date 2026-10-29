@@ -1,5 +1,6 @@
 "use client";
 
+import { Pause, Play } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { Artist, Product } from "@muraton/shared/types";
@@ -44,7 +45,7 @@ export function TrendingArtistRow({
       aria-label={isPlaying ? "일시정지" : "재생"}
       className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-xs text-white transition hover:bg-accent-strong sm:h-9 sm:w-9 sm:text-sm"
     >
-      {isPlaying ? "❚❚" : "▶"}
+      {isPlaying ? <Pause aria-hidden className="size-3.5 fill-current" /> : <Play aria-hidden className="size-3.5 translate-x-px fill-current" />}
     </button>
   );
 

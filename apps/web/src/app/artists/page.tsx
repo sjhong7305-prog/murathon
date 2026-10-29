@@ -60,29 +60,28 @@ export default async function ArtistsPage({
             <Link
               key={artist.id}
               href={`/artists/${artist.slug}`}
-              className="group flex gap-4 rounded-2xl border border-line bg-surface p-4 transition hover:shadow-md"
+              className="group flex gap-4 rounded-2xl bg-surface p-4 transition-colors hover:bg-tone"
             >
               <div className="w-24 shrink-0">
                 <CoverArt
                   gradient={artist.coverColor}
                   label={artist.name}
                   imageUrl={artist.imageUrl}
+                  initial={artist.name.charAt(0).toUpperCase()}
                   rounded="rounded-xl"
                   hideLabel
                   sizes="96px"
                 />
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-semibold text-accent-strong">
-                  {artist.genre} · {artist.location}
+                <h2 className="truncate text-lg font-bold text-ink group-hover:underline">{artist.name}</h2>
+                <p className="mt-0.5 truncate text-sm text-muted">
+                  {[artist.genre, artist.location].filter(Boolean).join(" · ")}
                 </p>
-                <h2 className="mt-0.5 truncate font-bold text-ink group-hover:underline">
-                  {artist.name}
-                </h2>
-                <p className="mt-1 line-clamp-2 text-sm text-muted">{artist.tagline}</p>
+                <p className="mt-2 line-clamp-2 text-sm text-ink/85">{artist.tagline}</p>
                 {artist.supporters && artist.supporters.length > 0 && (
                   <p className="mt-2 text-xs text-muted">
-                    🏆 서포터 {artist.supporters.length}명
+                    서포터 {artist.supporters.length}명
                   </p>
                 )}
               </div>

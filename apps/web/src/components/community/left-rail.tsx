@@ -13,8 +13,8 @@ export function LeftRail({
 }) {
   return (
     <div className="flex flex-col gap-5">
-      <div className="rounded-2xl border border-line bg-surface p-4">
-        <p className="text-sm font-bold text-ink">🔥 Trending Tags</p>
+      <div className="rounded-2xl bg-surface p-5">
+        <p className="text-sm font-bold text-ink">Trending Tags</p>
         {trendingTags.length === 0 ? (
           <p className="mt-2 text-xs text-muted">아직 태그가 달린 글이 없어요.</p>
         ) : (
@@ -46,8 +46,8 @@ export function LeftRail({
         )}
       </div>
 
-      <div className="rounded-2xl border border-line bg-surface p-4">
-        <p className="text-sm font-bold text-ink">🎵 커뮤니티의 아티스트</p>
+      <div className="rounded-2xl bg-surface p-5">
+        <p className="text-sm font-bold text-ink">커뮤니티의 아티스트</p>
         {communityArtists.length === 0 ? (
           <p className="mt-2 text-xs text-muted">아직 활동 중인 아티스트가 없어요.</p>
         ) : (

@@ -15,6 +15,10 @@
   --accent-strong: #44610f;
   --lime: #b8ff5a;
   --orange: #ff704d;
+  /* A tone step between surfaces, used instead of hairline borders. */
+  --tone: #eeece5;
+  /* Strong ease-out for UI responses (press, open, reveal). */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 @theme inline {
@@ -29,6 +33,7 @@
   --color-accent-strong: var(--accent-strong);
   --color-lime: var(--lime);
   --color-orange: var(--orange);
+  --color-tone: var(--tone);
   --font-sans: "Pretendard Variable", Pretendard, var(--font-geist-sans), -apple-system, BlinkMacSystemFont,
     system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
@@ -77,9 +82,14 @@ body {
     cursor: pointer;
   }
 
-  /* Tactile press feedback. `scale` composes with any transform a component already uses. */
+  /* Tactile press feedback. `scale` composes with any transform a component already uses; the
+     transition only applies where a utility hasn't set its own. */
+  button {
+    transition: scale 160ms var(--ease-out);
+  }
+
   button:not(:disabled):active {
-    scale: 0.98;
+    scale: 0.97;
   }
 
   @media (prefers-reduced-motion: reduce) {

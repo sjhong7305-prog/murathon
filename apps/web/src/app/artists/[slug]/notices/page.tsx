@@ -1,3 +1,4 @@
+import { Image as ImageIcon } from "lucide-react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Pin } from "lucide-react";
@@ -19,7 +20,7 @@ export default async function ArtistNoticesPage({ params }: { params: Promise<{ 
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-lg font-bold" style={{ color: "var(--artist-text)" }}>
-        📢 전체 공지
+        전체 공지
       </h1>
 
       {notices.length === 0 ? (
@@ -43,7 +44,7 @@ export default async function ArtistNoticesPage({ params }: { params: Promise<{ 
               >
                 {n.pinned && <Pin size={13} className="shrink-0" style={{ color: "var(--artist-accent)" }} />}
                 <span className="min-w-0 flex-1 truncate text-sm font-semibold">{n.title}</span>
-                {n.hasImage && <span className="shrink-0">🖼️</span>}
+                {n.hasImage && <ImageIcon aria-label="이미지 포함" className="size-3.5 shrink-0 opacity-60" />}
                 <span className="shrink-0 text-xs opacity-60">{formatRelativeTime(n.sentAt)}</span>
               </Link>
             </li>

@@ -35,7 +35,7 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-20 border-b border-line bg-cream/95 backdrop-blur-md">
+    <header className="sticky top-0 z-20 bg-surface">
       <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-4 sm:gap-5">
         <Link href="/" className="flex shrink-0 items-center gap-2">
           <Image src="/logo.png" alt="MU:RATHON" width={983} height={556} className="h-8 w-auto" priority />
@@ -83,17 +83,17 @@ export function Header() {
               <button
                 type="button"
                 onClick={() => setModeMenuOpen((v) => !v)}
-                className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 font-semibold hover:border-black/20"
+                className="flex items-center gap-1.5 rounded-full bg-tone px-3.5 py-1.5 font-semibold transition-colors hover:bg-line"
               >
                 <span className="max-w-[8rem] truncate">
-                  {activeArtist ? `🎸 ${activeArtist.name}` : `🎧 ${nickname ?? "내 계정"}`}
+                  {activeArtist ? activeArtist.name : nickname ?? "내 계정"}
                 </span>
               </button>
 
               {modeMenuOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setModeMenuOpen(false)} />
-                  <div className="absolute right-0 z-20 mt-2 w-56 rounded-xl border border-line bg-surface p-1.5 shadow-lg">
+                  <div className="absolute right-0 z-20 mt-2 w-56 rounded-xl bg-surface p-1.5 shadow-[0_16px_40px_rgba(28,27,24,0.14)]">
                     <button
                       type="button"
                       onClick={handleSwitchToFan}
@@ -101,7 +101,7 @@ export function Header() {
                         !activeArtist ? "text-accent-strong" : "text-ink"
                       }`}
                     >
-                      🎧 팬 모드
+                      팬 모드
                     </button>
 
                     {artists.length > 0 && (
@@ -116,7 +116,7 @@ export function Header() {
                           activeArtist?.id === artist.id ? "text-accent-strong" : "text-ink"
                         }`}
                       >
-                        🎸 {artist.name}
+                        {artist.name}
                       </button>
                     ))}
 
@@ -128,7 +128,7 @@ export function Header() {
                         onClick={() => setModeMenuOpen(false)}
                         className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold text-ink hover:bg-cream"
                       >
-                        🔗 내 아티스트 페이지 보기
+                        내 아티스트 페이지 보기
                       </Link>
                     )}
                     <div className="my-1 border-t border-line" />

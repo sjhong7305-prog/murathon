@@ -44,7 +44,7 @@ export function CommentSection({ productId }: { productId: string }) {
       {hydrated.isBuyer ? (
         <form
           onSubmit={handleSubmit}
-          className="mb-4 flex flex-col gap-2 rounded-xl border border-line bg-surface p-3"
+          className="mb-4 flex flex-col gap-2 rounded-xl bg-surface p-3"
         >
           <p className="text-sm font-bold text-ink">{nickname}</p>
           <div className="flex gap-2">
@@ -63,7 +63,7 @@ export function CommentSection({ productId }: { productId: string }) {
           </div>
         </form>
       ) : (
-        <div className="mb-4 flex items-center gap-2 rounded-xl border border-line bg-surface p-3">
+        <div className="mb-4 flex items-center gap-2 rounded-xl bg-tone p-3">
           <span className="flex items-center gap-1.5 px-1 text-xs font-bold text-muted">
             <Lock aria-hidden className="size-3.5" />
             이 곡을 구매한 사람만 댓글을 달 수 있습니다

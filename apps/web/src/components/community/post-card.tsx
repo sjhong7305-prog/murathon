@@ -1,3 +1,4 @@
+import { Check } from "lucide-react";
 import Link from "next/link";
 import { formatDate } from "@muraton/shared/format";
 import type { CommunityPost } from "@/lib/community-storage";
@@ -31,7 +32,7 @@ export function PostCard({
                 title="인증된 아티스트"
                 className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-white"
               >
-                ✓
+                <Check aria-hidden className="size-3" strokeWidth={3} />
               </span>
             )}
             <span className="shrink-0 text-xs text-muted">{formatDate(post.createdAt)}</span>
