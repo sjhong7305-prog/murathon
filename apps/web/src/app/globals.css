@@ -141,6 +141,20 @@ body {
   }
 }
 
+/* Full-screen mobile player (src/components/mini-player.tsx) slides up from the bar. */
+.player-sheet {
+  animation: player-sheet-in 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes player-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
 /* Dig in 30s cover fan: the playing cover lifts forward. */
 .dig-cover {
   transition: transform 300ms ease, box-shadow 300ms ease;
@@ -163,5 +177,9 @@ body {
 
   .dig-cover {
     transition: none;
+  }
+
+  .player-sheet {
+    animation: none;
   }
 }

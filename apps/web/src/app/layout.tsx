@@ -37,7 +37,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <CartProvider>
             <PlayerProvider>
               <Header />
-              <main className="flex-1 pb-20">{children}</main>
+              <main className="flex-1 pb-28">{children}</main>
               <footer className="border-t border-line">
                 <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-10 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
                   <div>

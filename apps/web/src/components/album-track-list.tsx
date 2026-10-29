@@ -1,156 +1,94 @@
 "use client";
 
-import { useRef, useState } from "react";
-import type { AlbumTrack } from "@muraton/shared/types";
+import { Lock, Pause, Play } from "lucide-react";
+import type { Artist, Product } from "@muraton/shared/types";
 import { formatDuration } from "@muraton/shared/format";
+import { trackKey, usePlayer } from "@/context/player-context";
+import { albumPlayerTracks } from "@/lib/album-player-tracks";
 
-interface StreamGrant {
-  url: string | null;
-  mode: "full" | "preview";
-  previewLimitSeconds: number;
-}
+/** Tracklist that plays through the global bottom player; clicking a row queues the whole release from that track. */
+export function AlbumTrackList({ product, artist }: { product: Product; artist: Artist }) {
+  const { current, playing, grant, previewEnded, playQueue, toggle } = usePlayer();
+  const tracks = albumPlayerTracks(product, artist);
+  if (tracks.length === 0) return null;
 
-interface Row {
-  id: string;
-  trackNumber: number;
-  title: string;
-  durationSec?: number;
-  isTitle: boolean;
-  streamPath: string;
-}
-
-export function AlbumTrackList({
-  productId,
-  productType,
-  productTitle,
-  productDurationSec,
-  tracks,
-}: {
-  productId: string;
-  productType: "album" | "track";
-  productTitle: string;
-  productDurationSec?: number;
-  tracks?: AlbumTrack[];
-}) {
-  const [playingId, setPlayingId] = useState<string | null>(null);
-  const [playing, setPlaying] = useState(false);
-  const [grant, setGrant] = useState<StreamGrant | null>(null);
-  const [previewEnded, setPreviewEnded] = useState(false);
-  const audioRef = useRef<HTMLAudioElement>(null);
-
-  const rows: Row[] =
-    productType === "track"
-      ? [
-          {
-            id: productId,
-            trackNumber: 1,
-            title: productTitle,
-            durationSec: productDurationSec,
-            isTitle: false,
-            streamPath: `/api/products/${productId}/stream`,
-          },
-        ]
-      : (tracks ?? []).map((t) => ({
-          id: t.id,
-          trackNumber: t.trackNumber,
-          title: t.title,
-          durationSec: t.durationSec,
-          isTitle: t.isTitle,
-          streamPath: `/api/album-tracks/${t.id}/stream`,
-        }));
-
-  if (rows.length === 0) return null;
-
-  const totalSeconds = rows.reduce((sum, r) => sum + (r.durationSec ?? 0), 0);
-
-  const handleRowClick = async (row: Row) => {
-    if (playingId === row.id) {
-      const audio = audioRef.current;
-      if (!audio) return;
-      if (audio.paused) audio.play().catch(() => {});
-      else audio.pause();
-      return;
-    }
-
-    setPlayingId(row.id);
-    setPreviewEnded(false);
-    setGrant(null);
-    setPlaying(true);
-    const res = await fetch(row.streamPath);
-    setGrant(res.ok ? await res.json() : null);
-  };
-
-  const handleTimeUpdate = () => {
-    const audio = audioRef.current;
-    if (!audio || !grant) return;
-    if (grant.mode === "preview" && audio.currentTime >= grant.previewLimitSeconds) {
-      audio.pause();
-      audio.currentTime = 0;
-      setPreviewEnded(true);
-    }
-  };
+  const titleTrackIds = new Set((product.tracks ?? []).filter((t) => t.isTitle).map((t) => `album-track-${t.id}`));
+  const totalSeconds = tracks.reduce((sum, t) => sum + (t.durationSec ?? 0), 0);
+  const currentKey = current ? trackKey(current) : null;
 
   return (
-    <section className="mt-8">
-      <h2 className="mb-3 text-lg font-bold text-ink">
-        수록곡 {rows.length}곡{totalSeconds > 0 ? ` · 총 ${formatDuration(totalSeconds)}` : ""}
-      </h2>
-      <div className="flex flex-col divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
-        {rows.map((row) => {
-          const isCurrent = playingId === row.id;
+    <section aria-labelledby="tracklist-title" className="mt-14">
+      <div className="mb-4 flex items-end justify-between gap-4">
+        <h2 id="tracklist-title" className="text-2xl font-bold tracking-tight text-ink">
+          수록곡
+        </h2>
+        <p className="text-sm text-muted tabular-nums">
+          {tracks.length}곡{totalSeconds > 0 ? ` · ${formatDuration(totalSeconds)}` : ""}
+        </p>
+      </div>
+
+      <ol className="overflow-hidden rounded-2xl border border-line bg-surface">
+        {tracks.map((track, i) => {
+          const isCurrent = currentKey === trackKey(track);
+          const isPlaying = isCurrent && playing;
           return (
-            <button
-              key={row.id}
-              type="button"
-              onClick={() => handleRowClick(row)}
-              className={`flex w-full items-center gap-3 px-3 py-2.5 text-left transition hover:bg-cream ${
-                isCurrent ? "bg-accent/10" : ""
-              }`}
-            >
-              <span className="w-5 shrink-0 text-center text-xs text-muted">{row.trackNumber}</span>
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-sm text-white">
-                {isCurrent && playing ? "❚❚" : "▶"}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="flex items-center gap-1.5">
+            <li key={trackKey(track)} className="border-b border-line last:border-b-0">
+              <button
+                type="button"
+                onClick={() => (isCurrent ? toggle() : playQueue(tracks, i))}
+                aria-label={isPlaying ? `${track.title} 일시정지` : `${track.title} 재생`}
+                aria-current={isCurrent || undefined}
+                className={`group flex min-h-14 w-full items-center gap-4 px-4 py-2 text-left transition-colors hover:bg-cream sm:px-5 ${
+                  isCurrent ? "bg-lime/20 hover:bg-lime/30" : ""
+                }`}
+              >
+                <span className="relative grid size-8 shrink-0 place-items-center">
                   <span
-                    className={`truncate text-sm font-semibold ${
-                      isCurrent ? "text-accent-strong" : "text-ink"
+                    className={`text-sm font-semibold text-muted tabular-nums transition-opacity ${
+                      isCurrent ? "opacity-0" : "group-hover:opacity-0"
                     }`}
                   >
-                    {row.title}
+                    {i + 1}
                   </span>
-                  {row.isTitle && (
-                    <span className="shrink-0 rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-bold text-white">
-                      TITLE
+                  <span
+                    aria-hidden
+                    className={`absolute inset-0 grid place-items-center rounded-full bg-ink text-cream transition-opacity ${
+                      isCurrent ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                    }`}
+                  >
+                    {isPlaying ? (
+                      <Pause className="size-3.5 fill-current" />
+                    ) : (
+                      <Play className="size-3.5 translate-x-px fill-current" />
+                    )}
+                  </span>
+                </span>
+
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-2">
+                    <span className={`truncate text-[15px] font-semibold ${isCurrent ? "text-ink" : "text-ink/90"}`}>
+                      {track.title}
+                    </span>
+                    {titleTrackIds.has(trackKey(track)) && (
+                      <span className="shrink-0 rounded-full bg-lime px-2 py-0.5 text-[10px] font-black tracking-wider text-ink">
+                        TITLE
+                      </span>
+                    )}
+                  </span>
+                  {isCurrent && grant?.mode === "preview" && (
+                    <span className="mt-0.5 flex items-center gap-1 text-xs text-muted">
+                      <Lock aria-hidden className="size-3" />
+                      {previewEnded ? "미리듣기 종료 · 구매 후 전체 듣기" : `미리듣기 ${grant.previewLimitSeconds}초`}
                     </span>
                   )}
                 </span>
-                {isCurrent && grant?.mode === "preview" && (
-                  <span className="block text-[11px] text-muted">
-                    {previewEnded ? "🔒 미리듣기 종료 · 구매 후 전체 듣기" : `미리듣기 ${grant.previewLimitSeconds}초`}
-                  </span>
-                )}
-              </span>
-              <span className="shrink-0 text-xs text-muted">{formatDuration(row.durationSec)}</span>
-            </button>
+
+                <span className="shrink-0 text-sm text-muted tabular-nums">{formatDuration(track.durationSec)}</span>
+              </button>
+            </li>
           );
         })}
-      </div>
-
-      {playingId && grant?.url && (
-        <audio
-          key={playingId}
-          ref={audioRef}
-          src={grant.url}
-          autoPlay
-          onTimeUpdate={handleTimeUpdate}
-          onPlay={() => setPlaying(true)}
-          onPause={() => setPlaying(false)}
-          onEnded={() => setPlayingId(null)}
-          className="hidden"
-        />
-      )}
+      </ol>
     </section>
   );
 }
