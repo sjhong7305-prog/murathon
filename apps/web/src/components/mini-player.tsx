@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ChevronDown,
+  CircleAlert,
   Heart,
   ListMusic,
   Lock,
@@ -16,7 +17,7 @@ import {
   VolumeX,
   X,
 } from "lucide-react";
-import { trackKey, usePlayer, usePlayerProgress } from "@/context/player-context";
+import { trackHref, trackKey, usePlayer, usePlayerProgress } from "@/context/player-context";
 import { CoverArt } from "@/components/cover-art";
 import { formatDuration } from "@muraton/shared/format";
 import { useProductLike } from "@/lib/use-product-like";
@@ -166,16 +167,26 @@ function VolumeControl() {
 }
 
 function PreviewNotice({ className = "" }: { className?: string }) {
-  const { grant, previewEnded, current } = usePlayer();
+  const { grant, previewEnded, current, failed } = usePlayer();
+  if (failed && current) {
+    return (
+      <p role="status" className={`flex items-center gap-1.5 text-xs font-semibold text-orange ${className}`}>
+        <CircleAlert aria-hidden className="size-3.5 shrink-0" />
+        <span className="truncate">재생할 수 없는 음원이에요.</span>
+      </p>
+    );
+  }
   if (grant?.mode !== "preview" || !current) return null;
   return (
     <p className={`flex items-center gap-1.5 text-xs text-muted ${className}`}>
       <Lock aria-hidden className="size-3.5 shrink-0" />
       <span className="truncate">
         {previewEnded ? "미리듣기가 끝났어요." : `미리듣기 ${grant.previewLimitSeconds}초.`}{" "}
-        <Link href={`/products/${current.productId}`} className="font-bold text-accent-strong hover:underline">
-          후원하고 전곡 듣기
-        </Link>
+        {current.likeable !== false && (
+          <Link href={trackHref(current)} className="font-bold text-accent-strong hover:underline">
+            후원하고 전곡 듣기
+          </Link>
+        )}
       </span>
     </p>
   );
@@ -297,7 +308,7 @@ function MobilePlayerSheet({ onClose }: { onClose: () => void }) {
             {current.artistName}
           </Link>
         </div>
-        <LikeButton productId={current.productId} className="-mr-2" />
+        {current.likeable !== false && <LikeButton productId={current.productId} className="-mr-2" />}
       </div>
 
       <div className="mt-4">
@@ -317,7 +328,7 @@ function MobilePlayerSheet({ onClose }: { onClose: () => void }) {
 }
 
 export function MiniPlayer() {
-  const { current, grant, close } = usePlayer();
+  const { current, grant, close, failed } = usePlayer();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [queueOpen, setQueueOpen] = useState(false);
 
@@ -360,7 +371,11 @@ export function MiniPlayer() {
               <span className="min-w-0">
                 <span className="block truncate text-sm font-bold text-ink">{current.title}</span>
                 <span className="block truncate text-xs text-muted">
-                  {grant?.mode === "preview" ? `미리듣기 · ${current.artistName}` : current.artistName}
+                  {failed
+                    ? "재생할 수 없는 음원이에요"
+                    : grant?.mode === "preview"
+                      ? `미리듣기 · ${current.artistName}`
+                      : current.artistName}
                 </span>
               </span>
             </button>
@@ -371,12 +386,12 @@ export function MiniPlayer() {
         {/* Desktop: track info / transport + seek / volume + queue. */}
         <div className="mx-auto hidden max-w-7xl grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)_minmax(0,1fr)] items-center gap-6 px-4 py-2.5 md:grid">
           <div className="flex min-w-0 items-center gap-3">
-            <Link href={`/products/${current.productId}`} className="w-14 shrink-0" aria-label={`${current.title} 페이지`}>
+            <Link href={trackHref(current)} className="w-14 shrink-0" aria-label={`${current.title} 페이지`}>
               {cover("56px")}
             </Link>
             <div className="min-w-0">
               <Link
-                href={`/products/${current.productId}`}
+                href={trackHref(current)}
                 className="block truncate text-sm font-bold text-ink hover:underline"
               >
                 {current.title}
@@ -388,7 +403,7 @@ export function MiniPlayer() {
                 {current.artistName}
               </Link>
             </div>
-            <LikeButton productId={current.productId} />
+            {current.likeable !== false && <LikeButton productId={current.productId} />}
           </div>
 
           <div className="flex min-w-0 flex-col items-center">
@@ -405,7 +420,7 @@ export function MiniPlayer() {
           </div>
 
           <div className="relative flex min-w-0 items-center justify-end gap-1">
-            <PreviewNotice className="mr-2 hidden xl:flex" />
+            <PreviewNotice className={`mr-2 ${failed ? "flex" : "hidden xl:flex"}`} />
             <VolumeControl />
             <button
               type="button"

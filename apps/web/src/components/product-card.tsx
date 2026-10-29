@@ -32,11 +32,11 @@ export function ProductCard({
       <div className={isList ? "w-16 shrink-0 sm:w-20" : "w-full"}>
         {product.previewAudioUrl ? (
           <HoverAudioPreview
+            productId={product.id}
             gradient={product.coverColor}
             label={product.title}
             type={product.type}
             imageUrl={product.imageUrl}
-            audioSrc={product.previewAudioUrl}
             hasSecret={Boolean(product.secretContent)}
             hideLabel={isList}
           />

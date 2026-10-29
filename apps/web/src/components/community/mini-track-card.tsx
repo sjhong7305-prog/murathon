@@ -1,25 +1,33 @@
 "use client";
 
-import { useRef, useState } from "react";
 import Link from "next/link";
+import { Pause, Play } from "lucide-react";
 import { CoverArt } from "@/components/cover-art";
 import { formatWon } from "@muraton/shared/format";
+import { usePlayer } from "@/context/player-context";
 import type { AttachedProduct } from "@/lib/community-storage";
 
 export function MiniTrackCard({ product }: { product: AttachedProduct }) {
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const [playing, setPlaying] = useState(false);
+  const { current, playing, playOne, toggle } = usePlayer();
+  const isCurrent = current?.productId === product.id;
+  const isPlaying = isCurrent && playing;
 
   const togglePlay = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const audio = audioRef.current;
-    if (!audio) return;
-    if (playing) {
-      audio.pause();
-    } else {
-      audio.play().catch(() => {});
+    if (isCurrent) {
+      toggle();
+      return;
     }
+    playOne({
+      productId: product.id,
+      title: product.title,
+      artistName: product.artistName,
+      // Filled in from the stream grant; the attachment snapshot doesn't carry the slug.
+      artistSlug: "",
+      coverColor: product.coverColor,
+      imageUrl: product.imageUrl,
+    });
   };
 
   return (
@@ -46,24 +54,18 @@ export function MiniTrackCard({ product }: { product: AttachedProduct }) {
       </div>
 
       {product.previewAudioUrl && (
-        <>
-          <button
-            type="button"
-            onClick={togglePlay}
-            aria-label={playing ? "일시정지" : "미리듣기 재생"}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-white transition hover:bg-accent-strong"
-          >
-            {playing ? "❚❚" : "▶"}
-          </button>
-          <audio
-            ref={audioRef}
-            src={product.previewAudioUrl}
-            onPlay={() => setPlaying(true)}
-            onPause={() => setPlaying(false)}
-            onEnded={() => setPlaying(false)}
-            className="hidden"
-          />
-        </>
+        <button
+          type="button"
+          onClick={togglePlay}
+          aria-label={isPlaying ? `${product.title} 일시정지` : `${product.title} 미리듣기 재생`}
+          className="grid size-11 shrink-0 place-items-center rounded-full bg-accent text-white transition hover:bg-accent-strong"
+        >
+          {isPlaying ? (
+            <Pause aria-hidden className="size-4 fill-current" />
+          ) : (
+            <Play aria-hidden className="size-4 translate-x-px fill-current" />
+          )}
+        </button>
       )}
     </Link>
   );

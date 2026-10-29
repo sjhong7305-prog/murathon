@@ -4,7 +4,7 @@ import Image from "next/image";
 import { prisma } from "@muraton/db";
 import { serializeTrack } from "@/lib/track-serialize";
 import { GENRES } from "@/lib/genres";
-import { TrackPreviewPlayer } from "@/components/track-preview-player";
+import { TrackPlayButton } from "@/components/track-play-button";
 import { ArtistStorySection } from "@/components/artist-story-section";
 import type { StoryPrompts } from "@/lib/tracks-storage";
 
@@ -41,7 +41,14 @@ export default async function TrackPage({
 
       {track.previewAudioUrl && (
         <div className="mt-6">
-          <TrackPreviewPlayer src={track.previewAudioUrl} limitSeconds={track.previewLimitSeconds} />
+          <TrackPlayButton
+            trackId={track.id}
+            title={track.title}
+            artistName={trackRow.artist.name}
+            artistSlug={trackRow.artist.slug}
+            imageUrl={trackRow.artist.imageUrl ?? undefined}
+            limitSeconds={track.previewLimitSeconds}
+          />
         </div>
       )}
 

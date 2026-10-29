@@ -5,6 +5,9 @@ export interface StreamGrant {
   url: string | null;
   mode: "full" | "preview";
   previewLimitSeconds: number;
+  /** Lets the player label an item that was started without artist info (e.g. a bare product card). */
+  artistName: string;
+  artistSlug: string;
 }
 
 /**
@@ -15,7 +18,7 @@ export interface StreamGrant {
 export async function getStreamGrant(productId: string, userId: string | null): Promise<StreamGrant | null> {
   const product = await prisma.product.findUnique({
     where: { id: productId },
-    select: { previewAudioUrl: true },
+    select: { previewAudioUrl: true, artist: { select: { name: true, slug: true } } },
   });
   if (!product) return null;
 
@@ -27,6 +30,8 @@ export async function getStreamGrant(productId: string, userId: string | null): 
     url: product.previewAudioUrl,
     mode: owned ? "full" : "preview",
     previewLimitSeconds: PREVIEW_LIMIT_SECONDS,
+    artistName: product.artist.name,
+    artistSlug: product.artist.slug,
   };
 }
 
@@ -41,7 +46,10 @@ export async function getAlbumTrackStreamGrant(
 ): Promise<StreamGrant | null> {
   const track = await prisma.albumTrack.findUnique({
     where: { id: trackId },
-    select: { previewUrl: true, product: { select: { id: true, previewAudioUrl: true } } },
+    select: {
+      previewUrl: true,
+      product: { select: { id: true, previewAudioUrl: true, artist: { select: { name: true, slug: true } } } },
+    },
   });
   if (!track) return null;
 
@@ -55,5 +63,26 @@ export async function getAlbumTrackStreamGrant(
     url: track.previewUrl ?? track.product.previewAudioUrl,
     mode: owned ? "full" : "preview",
     previewLimitSeconds: PREVIEW_LIMIT_SECONDS,
+    artistName: track.product.artist.name,
+    artistSlug: track.product.artist.slug,
+  };
+}
+
+/**
+ * A standalone uploaded track (the `tracks` table, /tracks/[id]) is never sold, so it only ever
+ * plays as a preview cut at the artist's own limit.
+ */
+export async function getUploadedTrackStreamGrant(trackId: string): Promise<StreamGrant | null> {
+  const track = await prisma.track.findUnique({
+    where: { id: trackId },
+    select: { previewAudioUrl: true, previewLimitSeconds: true, artist: { select: { name: true, slug: true } } },
+  });
+  if (!track) return null;
+  return {
+    url: track.previewAudioUrl,
+    mode: "preview",
+    previewLimitSeconds: track.previewLimitSeconds,
+    artistName: track.artist.name,
+    artistSlug: track.artist.slug,
   };
 }

@@ -15,12 +15,18 @@ export interface PlayerTrack {
   /** Stream-grant endpoint. Defaults to the product's own `/api/products/:id/stream`. */
   streamPath?: string;
   durationSec?: number;
+  /** Page for this item. Defaults to the release page `/products/:productId`. */
+  href?: string;
+  /** False for items that aren't store releases (standalone uploads), which can't be wishlisted. */
+  likeable?: boolean;
 }
 
 interface StreamGrant {
   url: string | null;
   mode: "full" | "preview";
   previewLimitSeconds: number;
+  artistName?: string;
+  artistSlug?: string;
 }
 
 interface PlayerContextValue {
@@ -30,6 +36,8 @@ interface PlayerContextValue {
   playing: boolean;
   grant: StreamGrant | null;
   previewEnded: boolean;
+  /** The audio file couldn't be loaded (missing or broken URL). */
+  failed: boolean;
   volume: number;
   audioRef: React.RefObject<HTMLAudioElement | null>;
   playQueue: (tracks: PlayerTrack[], startIndex?: number) => void;
@@ -59,19 +67,32 @@ export function trackKey(track: PlayerTrack) {
   return track.key ?? track.productId;
 }
 
+export function trackHref(track: PlayerTrack) {
+  return track.href ?? `/products/${track.productId}`;
+}
+
 export function PlayerProvider({ children }: { children: ReactNode }) {
   const [queue, setQueue] = useState<PlayerTrack[]>([]);
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [playing, setPlaying] = useState(false);
   const [grant, setGrant] = useState<StreamGrant | null>(null);
   const [previewEnded, setPreviewEnded] = useState(false);
+  const [failed, setFailed] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [fileDuration, setFileDuration] = useState(0);
   const [volume, setVolumeState] = useState(1);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  const current = currentIndex >= 0 ? queue[currentIndex] ?? null : null;
-  const currentKey = current ? trackKey(current) : null;
+  const queued = currentIndex >= 0 ? queue[currentIndex] ?? null : null;
+  const currentKey = queued ? trackKey(queued) : null;
+  // Items can be started without artist info (a bare product card); the stream grant fills it in.
+  const current = queued
+    ? {
+        ...queued,
+        artistName: queued.artistName || grant?.artistName || "",
+        artistSlug: queued.artistSlug || grant?.artistSlug || "",
+      }
+    : null;
   const duration =
     grant?.mode === "preview" && fileDuration > 0
       ? Math.min(fileDuration, grant.previewLimitSeconds)
@@ -95,16 +116,22 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     }
     setGrant(null);
     setPreviewEnded(false);
+    setFailed(false);
     setCurrentTime(0);
     setFileDuration(0);
     let cancelled = false;
     fetch(current.streamPath ?? `/api/products/${current.productId}/stream`)
       .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (!cancelled) setGrant(data);
+      .then((data: StreamGrant | null) => {
+        if (cancelled) return;
+        setGrant(data);
+        if (!data?.url) setFailed(true);
       })
       .catch(() => {
-        if (!cancelled) setGrant(null);
+        if (!cancelled) {
+          setGrant(null);
+          setFailed(true);
+        }
       });
     return () => {
       cancelled = true;
@@ -215,6 +242,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         playing,
         grant,
         previewEnded,
+        failed,
         volume,
         audioRef,
         playQueue,
@@ -245,6 +273,10 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
           onEnded={next}
+          onError={() => {
+            setFailed(true);
+            setPlaying(false);
+          }}
           className="hidden"
         />
       )}
