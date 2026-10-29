@@ -1,15 +1,18 @@
 @import "tailwindcss";
 
+/* One warm-neutral palette with lime as the only accent color. "accent" is the primary action
+   color (near-black pills, selected states); "accent-strong" is its hover state and the
+   emphasis color for links and prices on light surfaces: a dark lime that stays readable on cream. */
 :root {
-  --background: #f9f9f7;
-  --foreground: #2a2a2a;
-  --cream: #f9f9f7;
+  --background: #f7f6f2;
+  --foreground: #1c1b18;
+  --cream: #f7f6f2;
   --surface: #ffffff;
-  --ink: #2a2a2a;
-  --muted: #5f5f5f;
-  --line: #e5e5e0;
-  --accent: #8b75d7;
-  --accent-strong: #6b4fa8;
+  --ink: #1c1b18;
+  --muted: #67645b;
+  --line: #e4e1d8;
+  --accent: #1c1b18;
+  --accent-strong: #44610f;
   --lime: #b8ff5a;
   --orange: #ff704d;
 }
@@ -26,13 +29,68 @@
   --color-accent-strong: var(--accent-strong);
   --color-lime: var(--lime);
   --color-orange: var(--orange);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: "Pretendard Variable", Pretendard, var(--font-geist-sans), -apple-system, BlinkMacSystemFont,
+    system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+}
+
+/* Site-wide typography and interaction defaults. In @layer base so any utility class still wins. */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    /* Korean wraps at word boundaries, not mid-word; long unbroken strings (URLs) may still wrap. */
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    letter-spacing: -0.01em;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background: var(--lime);
+    color: #141412;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+
+  /* Tactile press feedback. `scale` composes with any transform a component already uses. */
+  button:not(:disabled):active {
+    scale: 0.98;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    button:not(:disabled):active {
+      scale: none;
+    }
+  }
 }
 
 /* Horizontal scroll strips (mobile nav/chip rows) should scroll without showing a track. */
