@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { Heart } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/cart-context";
 import { useAuth } from "@/context/auth-context";
@@ -161,6 +162,16 @@ export function Header() {
             </button>
           )}
 
+          {isLoggedIn && (
+            <Link
+              href="/wishlist"
+              aria-label="위시리스트"
+              className="flex items-center gap-1 hover:text-accent-strong"
+            >
+              <Heart aria-hidden className="size-4" />
+              <span className="hidden lg:inline">위시리스트</span>
+            </Link>
+          )}
           <Link href="/cart" className="relative flex items-center gap-1 hover:text-accent-strong">
             장바구니
             {totalCount > 0 && (

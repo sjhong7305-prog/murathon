@@ -54,10 +54,7 @@ function useGridColumns(ref: React.RefObject<HTMLElement | null>) {
   return columns;
 }
 
-/**
- * Music-only browse grid. Clicking a card starts its title track and opens a detail panel directly
- * under that card's row (the cards themselves stay as they are).
- */
+/** Music-only browse page: a music search on top of the release grid. */
 export function MusicBrowser({
   releases,
   artists,
@@ -68,19 +65,9 @@ export function MusicBrowser({
   initialQuery: string;
 }) {
   const [query, setQuery] = useState(initialQuery);
-  const [openId, setOpenId] = useState<string | null>(null);
-  const gridRef = useRef<HTMLUListElement>(null);
-  const columns = useGridColumns(gridRef);
-  const { current, playQueue } = usePlayer();
   const artistById = useMemo(() => new Map(artists.map((a) => [a.id, a])), [artists]);
   const trimmed = query.trim();
   const visible = releases.filter((r) => matches(r, artistById.get(r.artistId), trimmed));
-
-  const openIndex = visible.findIndex((r) => r.id === openId);
-  const openRelease = openIndex >= 0 ? visible[openIndex] : null;
-  // The panel goes after the last card in the open card's row.
-  const panelAfterIndex =
-    openIndex >= 0 ? Math.min(visible.length - 1, Math.floor(openIndex / columns) * columns + columns - 1) : -1;
 
   const updateQuery = (value: string) => {
     setQuery(value);
@@ -88,23 +75,6 @@ export function MusicBrowser({
     const params = new URLSearchParams({ type: "music" });
     if (value.trim()) params.set("q", value.trim());
     window.history.replaceState(null, "", `/search?${params}`);
-  };
-
-  const artistRefFor = (release: Product) => artistById.get(release.artistId) ?? { name: "알 수 없는 아티스트", slug: "" };
-
-  const handleCardClick = (release: Product) => {
-    if (openId === release.id) {
-      setOpenId(null);
-      return;
-    }
-    setOpenId(release.id);
-    // Opening a card starts its title track, unless this release is already what's playing.
-    if (!isPlayable(release) || current?.productId === release.id) return;
-    const queue = albumPlayerTracks(release, artistRefFor(release));
-    const titleIndex = [...(release.tracks ?? [])]
-      .sort((a, b) => a.trackNumber - b.trackNumber)
-      .findIndex((t) => t.isTitle);
-    if (queue.length > 0) playQueue(queue, Math.max(0, titleIndex));
   };
 
   return (
@@ -144,34 +114,73 @@ export function MusicBrowser({
           찾는 음원이 없어요. 아티스트 이름이나 곡 제목으로 다시 검색해보세요.
         </p>
       ) : (
-        <ul ref={gridRef} className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-6">
-          {visible.map((release, i) => (
-            <Fragment key={release.id}>
-              <li>
-                <MusicCard
-                  release={release}
-                  artistName={artistRefFor(release).name}
-                  open={openId === release.id}
-                  panelId={`music-panel-${release.id}`}
-                  onClick={() => handleCardClick(release)}
-                />
-              </li>
-              {openRelease && i === panelAfterIndex && (
-                <li className="col-span-full">
-                  <ReleasePanel
-                    key={openRelease.id}
-                    release={openRelease}
-                    artist={artistRefFor(openRelease)}
-                    caretPercent={(((openIndex % columns) + 0.5) / columns) * 100}
-                    onClose={() => setOpenId(null)}
-                  />
-                </li>
-              )}
-            </Fragment>
-          ))}
-        </ul>
+        <ReleaseGrid releases={visible} artists={artists} />
       )}
     </div>
+  );
+}
+
+/**
+ * Release card grid. Clicking a card starts its title track and opens a detail panel directly
+ * under that card's row (the cards themselves stay as they are).
+ */
+export function ReleaseGrid({ releases, artists }: { releases: Product[]; artists: MusicArtist[] }) {
+  const [openId, setOpenId] = useState<string | null>(null);
+  const gridRef = useRef<HTMLUListElement>(null);
+  const columns = useGridColumns(gridRef);
+  const { current, playQueue } = usePlayer();
+  const artistById = useMemo(() => new Map(artists.map((a) => [a.id, a])), [artists]);
+
+  const openIndex = releases.findIndex((r) => r.id === openId);
+  const openRelease = openIndex >= 0 ? releases[openIndex] : null;
+  // The panel goes after the last card in the open card's row.
+  const panelAfterIndex =
+    openIndex >= 0 ? Math.min(releases.length - 1, Math.floor(openIndex / columns) * columns + columns - 1) : -1;
+
+  const artistRefFor = (release: Product) => artistById.get(release.artistId) ?? { name: "알 수 없는 아티스트", slug: "" };
+
+  const handleCardClick = (release: Product) => {
+    if (openId === release.id) {
+      setOpenId(null);
+      return;
+    }
+    setOpenId(release.id);
+    // Opening a card starts its title track, unless this release is already what's playing.
+    if (!isPlayable(release) || current?.productId === release.id) return;
+    const queue = albumPlayerTracks(release, artistRefFor(release));
+    const titleIndex = [...(release.tracks ?? [])]
+      .sort((a, b) => a.trackNumber - b.trackNumber)
+      .findIndex((t) => t.isTitle);
+    if (queue.length > 0) playQueue(queue, Math.max(0, titleIndex));
+  };
+
+  return (
+    <ul ref={gridRef} className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-6">
+      {releases.map((release, i) => (
+        <Fragment key={release.id}>
+          <li>
+            <MusicCard
+              release={release}
+              artistName={artistRefFor(release).name}
+              open={openId === release.id}
+              panelId={`music-panel-${release.id}`}
+              onClick={() => handleCardClick(release)}
+            />
+          </li>
+          {openRelease && i === panelAfterIndex && (
+            <li className="col-span-full">
+              <ReleasePanel
+                key={openRelease.id}
+                release={openRelease}
+                artist={artistRefFor(openRelease)}
+                caretPercent={(((openIndex % columns) + 0.5) / columns) * 100}
+                onClose={() => setOpenId(null)}
+              />
+            </li>
+          )}
+        </Fragment>
+      ))}
+    </ul>
   );
 }
 
