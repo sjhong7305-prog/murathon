@@ -170,6 +170,22 @@ body {
   }
 }
 
+/* Music page detail panel (src/components/music-browser.tsx) opening under a card row. */
+.music-panel {
+  animation: music-panel-in 280ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes music-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Dig in 30s cover fan: the playing cover lifts forward. */
 .dig-cover {
   transition: transform 300ms ease, box-shadow 300ms ease;
@@ -195,7 +211,8 @@ body {
   }
 
   .player-sheet,
-  .eq-bar {
+  .eq-bar,
+  .music-panel {
     animation: none;
   }
 }

@@ -1,8 +1,8 @@
 "use client";
 
-import { useId, useMemo, useState } from "react";
+import { Fragment, useEffect, useId, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, ChevronDown, Heart, Search, X } from "lucide-react";
+import { ArrowRight, Heart, Pause, Play, Search, X } from "lucide-react";
 import type { Artist, Product } from "@muraton/shared/types";
 import { formatWon } from "@muraton/shared/format";
 import { formatReleaseLabel } from "@muraton/shared/release-label";
@@ -36,7 +36,28 @@ function matches(release: Product, artist: MusicArtist | undefined, query: strin
     .every((word) => haystack.includes(word));
 }
 
-/** Music-only browse list: search on top, and each release opens inline (accordion) and starts its title track. */
+/** Number of columns the grid currently renders, read from its computed template so it follows the breakpoints. */
+function useGridColumns(ref: React.RefObject<HTMLElement | null>) {
+  const [columns, setColumns] = useState(2);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const measure = () => {
+      const template = getComputedStyle(el).gridTemplateColumns;
+      setColumns(Math.max(1, template.split(" ").filter(Boolean).length));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [ref]);
+  return columns;
+}
+
+/**
+ * Music-only browse grid. Clicking a card starts its title track and opens a detail panel directly
+ * under that card's row (the cards themselves stay as they are).
+ */
 export function MusicBrowser({
   releases,
   artists,
@@ -48,9 +69,18 @@ export function MusicBrowser({
 }) {
   const [query, setQuery] = useState(initialQuery);
   const [openId, setOpenId] = useState<string | null>(null);
+  const gridRef = useRef<HTMLUListElement>(null);
+  const columns = useGridColumns(gridRef);
+  const { current, playQueue } = usePlayer();
   const artistById = useMemo(() => new Map(artists.map((a) => [a.id, a])), [artists]);
   const trimmed = query.trim();
   const visible = releases.filter((r) => matches(r, artistById.get(r.artistId), trimmed));
+
+  const openIndex = visible.findIndex((r) => r.id === openId);
+  const openRelease = openIndex >= 0 ? visible[openIndex] : null;
+  // The panel goes after the last card in the open card's row.
+  const panelAfterIndex =
+    openIndex >= 0 ? Math.min(visible.length - 1, Math.floor(openIndex / columns) * columns + columns - 1) : -1;
 
   const updateQuery = (value: string) => {
     setQuery(value);
@@ -60,9 +90,26 @@ export function MusicBrowser({
     window.history.replaceState(null, "", `/search?${params}`);
   };
 
+  const artistRefFor = (release: Product) => artistById.get(release.artistId) ?? { name: "알 수 없는 아티스트", slug: "" };
+
+  const handleCardClick = (release: Product) => {
+    if (openId === release.id) {
+      setOpenId(null);
+      return;
+    }
+    setOpenId(release.id);
+    // Opening a card starts its title track, unless this release is already what's playing.
+    if (!isPlayable(release) || current?.productId === release.id) return;
+    const queue = albumPlayerTracks(release, artistRefFor(release));
+    const titleIndex = [...(release.tracks ?? [])]
+      .sort((a, b) => a.trackNumber - b.trackNumber)
+      .findIndex((t) => t.isTitle);
+    if (queue.length > 0) playQueue(queue, Math.max(0, titleIndex));
+  };
+
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 sm:py-12">
-      <form role="search" onSubmit={(e) => e.preventDefault()} className="relative">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12">
+      <form role="search" onSubmit={(e) => e.preventDefault()} className="relative mx-auto max-w-3xl">
         <label htmlFor="music-search" className="sr-only">
           음원 검색
         </label>
@@ -88,7 +135,7 @@ export function MusicBrowser({
         )}
       </form>
 
-      <p className="mt-6 mb-3 px-1 text-sm text-muted tabular-nums" aria-live="polite">
+      <p className="mt-8 mb-3 text-sm text-muted tabular-nums" aria-live="polite">
         {trimmed ? `"${trimmed}" 검색 결과 ${visible.length}개` : `음원 ${visible.length}개`}
       </p>
 
@@ -97,16 +144,30 @@ export function MusicBrowser({
           찾는 음원이 없어요. 아티스트 이름이나 곡 제목으로 다시 검색해보세요.
         </p>
       ) : (
-        <ul className="flex flex-col gap-3">
-          {visible.map((release) => (
-            <li key={release.id}>
-              <ReleaseAccordion
-                release={release}
-                artist={artistById.get(release.artistId)}
-                open={openId === release.id}
-                onToggle={(next) => setOpenId(next ? release.id : null)}
-              />
-            </li>
+        <ul ref={gridRef} className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-6">
+          {visible.map((release, i) => (
+            <Fragment key={release.id}>
+              <li>
+                <MusicCard
+                  release={release}
+                  artistName={artistRefFor(release).name}
+                  open={openId === release.id}
+                  panelId={`music-panel-${release.id}`}
+                  onClick={() => handleCardClick(release)}
+                />
+              </li>
+              {openRelease && i === panelAfterIndex && (
+                <li className="col-span-full">
+                  <ReleasePanel
+                    key={openRelease.id}
+                    release={openRelease}
+                    artist={artistRefFor(openRelease)}
+                    caretPercent={(((openIndex % columns) + 0.5) / columns) * 100}
+                    onClose={() => setOpenId(null)}
+                  />
+                </li>
+              )}
+            </Fragment>
           ))}
         </ul>
       )}
@@ -114,139 +175,191 @@ export function MusicBrowser({
   );
 }
 
-function ReleaseAccordion({
+/** Same look as the store's ProductCard, but a button: it plays and opens details instead of navigating. */
+function MusicCard({
   release,
-  artist,
+  artistName,
   open,
-  onToggle,
+  panelId,
+  onClick,
 }: {
   release: Product;
-  artist: MusicArtist | undefined;
+  artistName: string;
   open: boolean;
-  onToggle: (open: boolean) => void;
+  panelId: string;
+  onClick: () => void;
 }) {
-  const panelId = useId();
-  const { current, playing, playQueue } = usePlayer();
-  const { liked, toggleLike } = useProductLike(release.id);
-  const artistRef = artist ?? { name: "알 수 없는 아티스트", slug: "" };
+  const { current, playing } = usePlayer();
   const isNowPlaying = current?.productId === release.id && playing;
-  const playable = isPlayable(release);
-  const trackCount = release.tracks?.length ?? 0;
-  const description = release.description || release.longDescription;
-
-  const handleToggle = () => {
-    const opening = !open;
-    onToggle(opening);
-    // Opening a card starts its title track, unless this release is already what's playing.
-    if (opening && playable && current?.productId !== release.id) {
-      const queue = albumPlayerTracks(release, artistRef);
-      const titleIndex = (release.tracks ?? [])
-        .slice()
-        .sort((a, b) => a.trackNumber - b.trackNumber)
-        .findIndex((t) => t.isTitle);
-      if (queue.length > 0) playQueue(queue, Math.max(0, titleIndex));
-    }
-  };
+  const isPwyw = release.minPrice === 0;
 
   return (
-    <article
-      className={`overflow-hidden rounded-2xl border bg-surface transition-[border-color,box-shadow] duration-300 ${
-        open ? "border-ink/25 shadow-[0_16px_40px_rgba(28,27,24,0.08)]" : "border-line hover:border-ink/20"
+    <button
+      type="button"
+      onClick={onClick}
+      aria-expanded={open}
+      aria-controls={open ? panelId : undefined}
+      className={`group flex w-full flex-col gap-3 rounded-2xl p-3 text-left transition ${
+        open ? "bg-surface shadow-[0_0_0_2px_var(--ink)]" : "hover:bg-surface"
       }`}
     >
-      <h3>
-        <button
-          type="button"
-          onClick={handleToggle}
-          aria-expanded={open}
-          aria-controls={panelId}
-          className="flex w-full items-center gap-4 p-3 text-left sm:p-4"
+      <span className="relative block w-full">
+        <CoverArt
+          gradient={release.coverColor}
+          label={release.title}
+          type={release.type}
+          imageUrl={release.imageUrl}
+          hasSecret={Boolean(release.secretContent)}
+        />
+        {isPlayable(release) && (
+        <span
+          aria-hidden
+          className={`absolute right-2.5 bottom-2.5 z-10 grid size-10 place-items-center rounded-full bg-lime text-ink shadow-[0_6px_16px_rgba(20,20,18,0.25)] transition duration-200 ${
+            open || isNowPlaying ? "opacity-100" : "translate-y-1 opacity-0 group-hover:translate-y-0 group-hover:opacity-100"
+          }`}
         >
-          <span className="relative w-16 shrink-0 rounded-xl bg-cream ring-1 ring-ink/8 sm:w-20">
-            <CoverArt
-              gradient={release.coverColor}
-              label={release.title}
-              imageUrl={release.imageUrl}
-              hideLabel
-              rounded="rounded-xl"
-              sizes="80px"
-            />
-            {isNowPlaying && (
-              <span aria-hidden className="absolute right-1 bottom-1 flex h-4 items-end gap-0.5 rounded-sm bg-ink/70 px-1 py-0.5">
-                <span className="eq-bar h-full w-0.5 bg-lime" />
-                <span className="eq-bar h-full w-0.5 bg-lime [animation-delay:-0.3s]" />
-                <span className="eq-bar h-full w-0.5 bg-lime [animation-delay:-0.6s]" />
-              </span>
-            )}
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-base font-bold text-ink sm:text-lg">{release.title}</span>
-            <span className="mt-0.5 block truncate text-sm text-muted">
-              {artistRef.name}
-              <span aria-hidden> · </span>
-              {formatReleaseLabel(release)}
-              {trackCount > 1 ? ` · ${trackCount}곡` : ""}
+          {isNowPlaying ? (
+            <span className="flex h-3.5 items-end gap-0.5">
+              <span className="eq-bar h-full w-0.5 bg-ink" />
+              <span className="eq-bar h-full w-0.5 bg-ink [animation-delay:-0.3s]" />
+              <span className="eq-bar h-full w-0.5 bg-ink [animation-delay:-0.6s]" />
             </span>
-            <span className="mt-1 block text-sm font-semibold text-accent-strong tabular-nums">
-              {release.minPrice === 0 ? "0원부터 자율 가격" : `${formatWon(release.suggestedPrice)}부터`}
-            </span>
-          </span>
-          <ChevronDown
-            aria-hidden
-            className={`size-5 shrink-0 text-muted transition-transform duration-300 motion-reduce:transition-none ${
-              open ? "rotate-180" : ""
-            }`}
-          />
-        </button>
-      </h3>
+          ) : (
+            <Play className="size-4 translate-x-px fill-current" />
+          )}
+        </span>
+        )}
+      </span>
+      <span className="min-w-0">
+        <span className="block truncate font-bold text-ink group-hover:underline">{release.title}</span>
+        <span className="block truncate text-sm text-muted">
+          {artistName} · {formatReleaseLabel(release)}
+        </span>
+        <span className="mt-1 block text-sm">
+          {isPwyw ? (
+            <>
+              <span className="font-semibold text-ink tabular-nums">{formatWon(release.suggestedPrice)}</span>{" "}
+              <span className="font-bold text-accent-strong">(자율 가격, 0원부터)</span>
+            </>
+          ) : (
+            <span className="font-semibold text-accent-strong tabular-nums">{formatWon(release.suggestedPrice)}부터</span>
+          )}
+        </span>
+      </span>
+    </button>
+  );
+}
 
-      <div
-        id={panelId}
-        role="region"
-        aria-label={`${release.title} 상세`}
-        className={`grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none ${
-          open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-        }`}
-        inert={!open}
-      >
-        <div className="min-h-0">
-          <div className="border-t border-line px-3 pt-5 pb-4 sm:px-4">
-            {description && (
-              <p className="line-clamp-3 max-w-[65ch] px-1 text-[15px] leading-relaxed text-ink/85">{description}</p>
-            )}
-            {!playable && (
-              <p className="mt-2 px-1 text-xs text-muted">아직 미리듣기 음원이 등록되지 않았어요.</p>
-            )}
+function ReleasePanel({
+  release,
+  artist,
+  caretPercent,
+  onClose,
+}: {
+  release: Product;
+  artist: Pick<Artist, "name" | "slug">;
+  caretPercent: number;
+  onClose: () => void;
+}) {
+  const headingId = useId();
+  const panelRef = useRef<HTMLElement>(null);
+  const { current, playing, toggle, playQueue } = usePlayer();
 
-            {(release.tracks?.length ?? 0) > 0 || release.type === "track" ? (
-              <div className="mt-4">
-                <TrackRows product={release} artist={artistRef} />
-              </div>
-            ) : null}
+  // Bring the details into view when they open below the fold.
+  useEffect(() => {
+    panelRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, []);
+  const { liked, toggleLike } = useProductLike(release.id);
+  const playable = isPlayable(release);
+  const isThisRelease = current?.productId === release.id;
+  const description = release.description || release.longDescription;
+  const hasTracks = (release.tracks?.length ?? 0) > 0 || release.type === "track";
 
-            <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center">
-              <Link
-                href={`/products/${release.id}`}
-                className="group inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-full bg-accent px-6 text-sm font-bold text-white transition hover:bg-accent-strong sm:flex-none"
-              >
-                앨범과 스토리 보기
-                <ArrowRight aria-hidden className="size-4 transition-transform group-hover:translate-x-0.5" />
-              </Link>
+  return (
+    <section
+      ref={panelRef}
+      id={`music-panel-${release.id}`}
+      aria-labelledby={headingId}
+      className="music-panel relative mt-2 mb-4 rounded-3xl bg-surface shadow-[0_0_0_1px_var(--line),0_20px_50px_rgba(28,27,24,0.08)]"
+    >
+      <span
+        aria-hidden
+        className="absolute -top-2 size-4 -translate-x-1/2 rotate-45 rounded-tl-sm bg-surface shadow-[-1px_-1px_0_var(--line)]"
+        style={{ left: `${caretPercent}%` }}
+      />
+      <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-10">
+        <div className="flex min-w-0 flex-col">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-xs font-bold tracking-[0.16em] text-muted">{formatReleaseLabel(release).toUpperCase()}</p>
+              <h2 id={headingId} className="mt-1.5 text-2xl leading-tight font-bold tracking-tight text-ink sm:text-3xl">
+                {release.title}
+              </h2>
+              <p className="mt-1 text-base font-semibold text-ink/80">{artist.name}</p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="상세 닫기"
+              className="-mt-1 -mr-2 grid size-11 shrink-0 place-items-center rounded-full text-muted transition hover:bg-ink/6 hover:text-ink"
+            >
+              <X aria-hidden className="size-5" />
+            </button>
+          </div>
+
+          {description ? (
+            <p className="mt-4 line-clamp-4 max-w-[60ch] text-[15px] leading-relaxed text-ink/85">{description}</p>
+          ) : null}
+          {!playable && <p className="mt-3 text-sm text-muted">아직 미리듣기 음원이 등록되지 않았어요.</p>}
+
+          <div className="mt-auto flex flex-col gap-2 pt-6 sm:flex-row sm:flex-wrap">
+            {playable && (
               <button
                 type="button"
-                onClick={toggleLike}
-                aria-pressed={liked}
-                className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-full border px-5 text-sm font-bold transition ${
-                  liked ? "border-orange/60 bg-orange/10 text-ink" : "border-line text-ink hover:border-ink/30"
-                }`}
+                onClick={() =>
+                  isThisRelease ? toggle() : playQueue(albumPlayerTracks(release, artist), 0)
+                }
+                aria-label={isThisRelease && playing ? "일시정지" : "재생"}
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-lime px-5 text-sm font-bold text-ink transition hover:scale-[1.02]"
               >
-                <Heart aria-hidden className={`size-4 ${liked ? "fill-orange text-orange" : ""}`} />
-                {liked ? "위시리스트에 담김" : "위시리스트"}
+                {isThisRelease && playing ? (
+                  <Pause aria-hidden className="size-4 fill-current" />
+                ) : (
+                  <Play aria-hidden className="size-4 fill-current" />
+                )}
+                {isThisRelease && playing ? "일시정지" : "재생"}
               </button>
-            </div>
+            )}
+            <Link
+              href={`/products/${release.id}`}
+              className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-accent px-6 text-sm font-bold text-white transition hover:bg-accent-strong"
+            >
+              앨범과 스토리 보기
+              <ArrowRight aria-hidden className="size-4 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+            <button
+              type="button"
+              onClick={toggleLike}
+              aria-pressed={liked}
+              className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-full border px-5 text-sm font-bold transition ${
+                liked ? "border-orange/60 bg-orange/10 text-ink" : "border-line text-ink hover:border-ink/30"
+              }`}
+            >
+              <Heart aria-hidden className={`size-4 ${liked ? "fill-orange text-orange" : ""}`} />
+              {liked ? "위시리스트에 담김" : "위시리스트"}
+            </button>
           </div>
         </div>
+
+        {hasTracks ? (
+          <div className="min-w-0">
+            <p className="mb-2 text-sm font-bold text-ink">
+              수록곡 <span className="font-semibold text-muted tabular-nums">{albumPlayerTracks(release, artist).length}</span>
+            </p>
+            <TrackRows product={release} artist={artist} />
+          </div>
+        ) : null}
       </div>
-    </article>
+    </section>
   );
 }
